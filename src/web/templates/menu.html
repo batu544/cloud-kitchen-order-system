@@ -1,0 +1,508 @@
+{% extends "base.html" %}
+
+{% block title %}Menu - Cloud Kitchen{% endblock %}
+
+{% block content %}
+<!-- Page Header with Controls -->
+<div class="bg-white shadow sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Our Menu</h1>
+                <p class="mt-1 text-gray-600">Browse our delicious selection</p>
+            </div>
+
+            <!-- Party Mode Toggle -->
+            <div class="flex items-center space-x-3">
+                <span class="text-sm text-gray-600">Ordering for a group?</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="party-mode-toggle" class="sr-only peer" onchange="togglePartyMode()">
+                    <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-orange-600"></div>
+                    <span class="ml-3 text-sm font-medium text-gray-900">Party Sizes</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Veg/Non-Veg Filter -->
+        <div class="flex items-center space-x-4 mb-3">
+            <span class="text-sm font-medium text-gray-700">Filter:</span>
+            <div class="flex space-x-2">
+                <button onclick="filterDietType('all')" class="diet-btn px-4 py-2 rounded-lg font-medium transition bg-orange-600 text-white border-2 border-orange-600" data-diet="all">
+                    Show All
+                </button>
+                <button onclick="filterDietType('veg')" class="diet-btn px-4 py-2 rounded-lg font-medium transition bg-white text-gray-700 border-2 border-green-500 hover:bg-green-50" data-diet="veg">
+                    <span class="inline-block w-4 h-4 border-2 border-green-600 mr-1 align-middle">
+                        <span class="block w-2 h-2 bg-green-600 rounded-full m-[2px]"></span>
+                    </span>
+                    Veg
+                </button>
+                <button onclick="filterDietType('non-veg')" class="diet-btn px-4 py-2 rounded-lg font-medium transition bg-white text-gray-700 border-2 border-red-500 hover:bg-red-50" data-diet="non-veg">
+                    <span class="inline-block w-4 h-4 border-2 border-red-600 mr-1 align-middle">
+                        <span class="block w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] border-b-red-600 m-[3px]"></span>
+                    </span>
+                    Non-Veg
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll-Spy Category Navigation -->
+    <div class="bg-gray-50 border-t border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav id="category-nav" class="flex space-x-1 overflow-x-auto py-3 scrollbar-hide">
+                <!-- Category buttons will be inserted here -->
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Menu Items by Category -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Loading state -->
+    <div id="loading-menu" class="flex items-center justify-center p-12">
+        <svg class="animate-spin h-12 w-12 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+
+    <!-- Menu sections by category -->
+    <div id="menu-sections" class="hidden space-y-12">
+        <!-- Sections will be rendered here -->
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-menu" class="hidden text-center p-12">
+        <div class="text-6xl mb-4">🍽️</div>
+        <p class="text-gray-600 text-lg">No items found matching your filters</p>
+    </div>
+</div>
+
+<!-- Add to Cart Modal -->
+<div id="cart-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4" id="modal-title">Add to Cart</h3>
+
+            <!-- Item Details -->
+            <div class="mb-4">
+                <p class="text-gray-600 text-sm mb-2" id="modal-description"></p>
+                <p class="text-2xl font-bold text-orange-600" id="modal-price"></p>
+            </div>
+
+            <!-- Catering Options (hidden by default) -->
+            <div id="catering-options" class="hidden mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Catering Tray Size</label>
+                <div class="space-y-2">
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="catering-size" value="small" class="mr-3">
+                        <div class="flex-1">
+                            <div class="font-medium">Small Tray</div>
+                            <div class="text-sm text-gray-600">Serves 4-6 people</div>
+                        </div>
+                        <div class="font-semibold text-orange-600" id="price-small"></div>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="catering-size" value="medium" class="mr-3">
+                        <div class="flex-1">
+                            <div class="font-medium">Medium Tray</div>
+                            <div class="text-sm text-gray-600">Serves 8-10 people</div>
+                        </div>
+                        <div class="font-semibold text-orange-600" id="price-medium"></div>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="catering-size" value="large" class="mr-3">
+                        <div class="flex-1">
+                            <div class="font-medium">Large Tray</div>
+                            <div class="text-sm text-gray-600">Serves 15-20 people</div>
+                        </div>
+                        <div class="font-semibold text-orange-600" id="price-large"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Quantity -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                <div class="flex items-center space-x-3">
+                    <button onclick="updateModalQuantity(-1)" class="w-10 h-10 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold">-</button>
+                    <input type="number" id="modal-quantity" value="1" min="1" class="w-20 text-center px-4 py-2 border border-gray-300 rounded-lg">
+                    <button onclick="updateModalQuantity(1)" class="w-10 h-10 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold">+</button>
+                </div>
+            </div>
+
+            <!-- Special Instructions -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Special Instructions (Optional)</label>
+                <textarea id="modal-instructions" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="E.g., Extra spicy, no onions..."></textarea>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex space-x-3">
+                <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium">
+                    Cancel
+                </button>
+                <button onclick="addToCart()" class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium">
+                    Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let menuData = { categories: [], items: [] };
+let selectedItem = null;
+let currentDietFilter = 'all'; // all, veg, non-veg
+let isPartyMode = false;
+let activeCategory = null;
+
+// Load menu on page load
+async function loadMenu() {
+    try {
+        const response = await api.getMenu();
+        menuData = response.data;
+
+        // Normalize field names for consistency
+        menuData.categories = menuData.categories.map(cat => ({
+            ...cat,
+            cat_name: cat.category_name,
+            cat_id: cat.category_id
+        }));
+
+        menuData.items = menuData.items.map(item => ({
+            ...item,
+            cat_name: item.category_name,
+            cat_id: item.category_id,
+            // Enhance items with diet type (mock data - should come from backend)
+            diet_type: item.kic_name.toLowerCase().includes('chicken') ||
+                      item.kic_name.toLowerCase().includes('lamb') ||
+                      item.kic_name.toLowerCase().includes('fish') ? 'non-veg' : 'veg'
+        }));
+
+        renderCategoryNav();
+        renderMenuSections();
+        setupScrollSpy();
+
+        document.getElementById('loading-menu').classList.add('hidden');
+        document.getElementById('menu-sections').classList.remove('hidden');
+    } catch (error) {
+        handleAPIError(error);
+        document.getElementById('loading-menu').innerHTML = `
+            <div class="text-center p-12">
+                <p class="text-red-600 font-semibold mb-2">Failed to load menu</p>
+                <p class="text-gray-600">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Render category navigation
+function renderCategoryNav() {
+    const nav = document.getElementById('category-nav');
+    if (!menuData.categories || menuData.categories.length === 0) {
+        nav.innerHTML = '<p class="text-gray-600 px-4">No categories available</p>';
+        return;
+    }
+
+    nav.innerHTML = menuData.categories.map(category => {
+        const catName = category.cat_name || 'Unknown';
+        return `
+            <a href="#section-${catName.replace(/\s+/g, '-')}"
+               class="category-nav-btn px-4 py-2 rounded-lg font-medium transition whitespace-nowrap bg-white text-gray-700 hover:bg-gray-100"
+               data-category="${catName}"
+               onclick="scrollToCategory('${catName}'); return false;">
+                ${getCategoryEmoji(catName)} ${catName}
+            </a>
+        `;
+    }).join('');
+}
+
+// Render menu sections by category
+function renderMenuSections() {
+    const container = document.getElementById('menu-sections');
+    const emptyState = document.getElementById('empty-menu');
+
+    container.innerHTML = '';
+    let hasVisibleItems = false;
+
+    if (!menuData.categories || menuData.categories.length === 0) {
+        container.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        return;
+    }
+
+    menuData.categories.forEach(category => {
+        const catName = category.cat_name || 'Unknown';
+        const categoryItems = getFilteredItems(catName);
+
+        if (categoryItems.length === 0) return;
+
+        hasVisibleItems = true;
+
+        const section = document.createElement('section');
+        section.id = `section-${catName.replace(/\s+/g, '-')}`;
+        section.className = 'scroll-mt-32';
+        section.innerHTML = `
+            <div class="flex items-center mb-6">
+                <span class="text-4xl mr-3">${getCategoryEmoji(catName)}</span>
+                <h2 class="text-2xl font-bold text-gray-900">${catName}</h2>
+                <span class="ml-3 text-sm text-gray-500">(${categoryItems.length} items)</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${categoryItems.map(item => renderMenuItem(item)).join('')}
+            </div>
+        `;
+
+        container.appendChild(section);
+    });
+
+    if (!hasVisibleItems) {
+        container.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+    } else {
+        container.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+    }
+}
+
+// Get filtered items based on current filters
+function getFilteredItems(categoryName) {
+    let items = menuData.items.filter(item => item.cat_name === categoryName);
+
+    // Filter by diet type
+    if (currentDietFilter !== 'all') {
+        items = items.filter(item => item.diet_type === currentDietFilter);
+    }
+
+    // Filter by party mode
+    if (isPartyMode) {
+        items = items.filter(item => item.is_catering);
+    } else {
+        items = items.filter(item => !item.is_catering);
+    }
+
+    return items;
+}
+
+// Render single menu item
+function renderMenuItem(item) {
+    const dietIcon = item.diet_type === 'veg'
+        ? '<span class="inline-block w-4 h-4 border-2 border-green-600"><span class="block w-2 h-2 bg-green-600 rounded-full m-[2px]"></span></span>'
+        : '<span class="inline-block w-4 h-4 border-2 border-red-600"><span class="block w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] border-b-red-600 m-[3px]"></span></span>';
+
+    return `
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+            <div class="h-48 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center relative">
+                <span class="text-6xl">${getCategoryEmoji(item.cat_name)}</span>
+                <div class="absolute top-3 left-3 bg-white rounded p-1">
+                    ${dietIcon}
+                </div>
+                ${item.is_catering ? '<div class="absolute top-3 right-3 bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">Party Tray</div>' : ''}
+            </div>
+            <div class="p-5">
+                <div class="flex items-start justify-between mb-2">
+                    <h3 class="font-semibold text-lg text-gray-900">${item.kic_name}</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">${item.description || 'Delicious dish made with fresh ingredients'}</p>
+                <div class="flex items-center justify-between">
+                    <span class="text-2xl font-bold text-orange-600">${formatCurrency(item.kic_price)}${item.is_catering ? '+' : ''}</span>
+                    <button onclick='openModal(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium">
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Filter by diet type
+function filterDietType(type) {
+    currentDietFilter = type;
+
+    // Update button styles
+    document.querySelectorAll('.diet-btn').forEach(btn => {
+        const isActive = btn.getAttribute('data-diet') === type;
+        const btnType = btn.getAttribute('data-diet');
+
+        if (isActive) {
+            if (btnType === 'all') {
+                btn.className = 'diet-btn px-4 py-2 rounded-lg font-medium transition bg-orange-600 text-white border-2 border-orange-600';
+            } else if (btnType === 'veg') {
+                btn.className = 'diet-btn px-4 py-2 rounded-lg font-medium transition bg-green-500 text-white border-2 border-green-600';
+            } else {
+                btn.className = 'diet-btn px-4 py-2 rounded-lg font-medium transition bg-red-500 text-white border-2 border-red-600';
+            }
+        } else {
+            if (btnType === 'all') {
+                btn.className = 'diet-btn px-4 py-2 rounded-lg font-medium transition bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50';
+            } else if (btnType === 'veg') {
+                btn.className = 'diet-btn px-4 py-2 rounded-lg font-medium transition bg-white text-gray-700 border-2 border-green-500 hover:bg-green-50';
+            } else {
+                btn.className = 'diet-btn px-4 py-2 rounded-lg font-medium transition bg-white text-gray-700 border-2 border-red-500 hover:bg-red-50';
+            }
+        }
+    });
+
+    renderMenuSections();
+}
+
+// Toggle party mode
+function togglePartyMode() {
+    isPartyMode = document.getElementById('party-mode-toggle').checked;
+    renderMenuSections();
+}
+
+// Scroll to category
+function scrollToCategory(categoryName) {
+    const sectionId = `section-${categoryName.replace(/\s+/g, '-')}`;
+    const section = document.getElementById(sectionId);
+    if (section) {
+        const offset = 120; // Account for sticky header
+        const elementPosition = section.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    }
+}
+
+// Setup scroll spy
+function setupScrollSpy() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const categoryName = entry.target.id.replace('section-', '').replace(/-/g, ' ');
+                updateActiveCategoryNav(categoryName);
+            }
+        });
+    }, {
+        rootMargin: '-120px 0px -70% 0px'
+    });
+
+    // Observe all category sections
+    if (menuData.categories && menuData.categories.length > 0) {
+        menuData.categories.forEach(category => {
+            const catName = category.cat_name || 'Unknown';
+            const sectionId = `section-${catName.replace(/\s+/g, '-')}`;
+            const section = document.getElementById(sectionId);
+            if (section) observer.observe(section);
+        });
+    }
+}
+
+// Update active category in nav
+function updateActiveCategoryNav(categoryName) {
+    document.querySelectorAll('.category-nav-btn').forEach(btn => {
+        const btnCategory = btn.getAttribute('data-category');
+        if (btnCategory === categoryName) {
+            btn.className = 'category-nav-btn px-4 py-2 rounded-lg font-medium transition whitespace-nowrap bg-orange-600 text-white';
+        } else {
+            btn.className = 'category-nav-btn px-4 py-2 rounded-lg font-medium transition whitespace-nowrap bg-white text-gray-700 hover:bg-gray-100';
+        }
+    });
+}
+
+// Get emoji for category
+function getCategoryEmoji(category) {
+    const emojis = {
+        'Appetizers': '🥟',
+        'Main Course': '🍛',
+        'Desserts': '🍰',
+        'Beverages': '🥤',
+        'Sides': '🍚'
+    };
+    return emojis[category] || '🍽️';
+}
+
+// Open add to cart modal
+function openModal(item) {
+    selectedItem = item;
+
+    document.getElementById('modal-title').textContent = item.kic_name;
+    document.getElementById('modal-description').textContent = item.description || 'Delicious dish made with fresh ingredients';
+    document.getElementById('modal-price').textContent = formatCurrency(item.kic_price);
+    document.getElementById('modal-quantity').value = 1;
+    document.getElementById('modal-instructions').value = '';
+
+    const cateringOptions = document.getElementById('catering-options');
+    if (item.is_catering) {
+        cateringOptions.classList.remove('hidden');
+
+        // Calculate and display catering prices
+        document.getElementById('price-small').textContent = formatCurrency(getCateringPrice(item.kic_price, 'small'));
+        document.getElementById('price-medium').textContent = formatCurrency(getCateringPrice(item.kic_price, 'medium'));
+        document.getElementById('price-large').textContent = formatCurrency(getCateringPrice(item.kic_price, 'large'));
+
+        // Select first option by default
+        document.querySelector('input[name="catering-size"][value="small"]').checked = true;
+    } else {
+        cateringOptions.classList.add('hidden');
+    }
+
+    document.getElementById('cart-modal').classList.remove('hidden');
+}
+
+// Close modal
+function closeModal() {
+    document.getElementById('cart-modal').classList.add('hidden');
+    selectedItem = null;
+}
+
+// Update quantity in modal
+function updateModalQuantity(delta) {
+    const input = document.getElementById('modal-quantity');
+    const newValue = parseInt(input.value) + delta;
+    if (newValue >= 1) {
+        input.value = newValue;
+    }
+}
+
+// Add item to cart
+function addToCart() {
+    if (!selectedItem) return;
+
+    const quantity = parseInt(document.getElementById('modal-quantity').value);
+    const instructions = document.getElementById('modal-instructions').value.trim();
+
+    let cartItem = {
+        kic_id: selectedItem.kic_id,
+        name: selectedItem.kic_name,
+        price: selectedItem.kic_price,
+        quantity: quantity,
+        special_instructions: instructions
+    };
+
+    // Handle catering items
+    if (selectedItem.is_catering) {
+        const sizeInput = document.querySelector('input[name="catering-size"]:checked');
+        if (!sizeInput) {
+            showToast('Please select a catering tray size', 'warning');
+            return;
+        }
+
+        cartItem.is_catering = true;
+        cartItem.catering_size = sizeInput.value;
+        cartItem.price = getCateringPrice(selectedItem.kic_price, sizeInput.value);
+    }
+
+    try {
+        cart.addItem(cartItem);
+        showToast(`${selectedItem.kic_name} added to cart!`, 'success');
+        closeModal();
+    } catch (error) {
+        showToast('Failed to add item to cart', 'error');
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('cart-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', loadMenu);
+</script>
+{% endblock %}

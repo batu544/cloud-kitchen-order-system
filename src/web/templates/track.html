@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Track Order - Cloud Kitchen{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 class="text-3xl font-bold text-gray-900">Track Your Order</h1>
+        <p class="mt-2 text-gray-600">Enter your order reference to see the status</p>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Search Form -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex space-x-4">
+            <input type="text" id="order-ref-input" placeholder="Enter order reference (e.g., ORD-ABC123)" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg">
+            <button onclick="trackOrder()" class="px-8 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition">
+                Track Order
+            </button>
+        </div>
+    </div>
+
+    <!-- Order Details -->
+    <div id="order-details" class="hidden">
+        <!-- Order Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900" id="order-ref"></h2>
+                    <p class="text-gray-600 mt-1" id="order-date"></p>
+                </div>
+                <div class="text-right">
+                    <div id="order-status-badge" class="inline-block px-4 py-2 rounded-full text-sm font-semibold"></div>
+                </div>
+            </div>
+
+            <!-- Customer Info -->
+            <div class="border-t pt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Customer</p>
+                        <p class="font-medium text-gray-900" id="customer-name"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Phone</p>
+                        <p class="font-medium text-gray-900" id="customer-phone"></p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="text-sm text-gray-600">Delivery Address</p>
+                        <p class="font-medium text-gray-900" id="customer-address"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Status Timeline -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-6">Order Status</h3>
+            <div id="status-timeline" class="space-y-6">
+                <!-- Timeline items will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Order Items</h3>
+            <div id="order-items" class="space-y-3">
+                <!-- Items will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Order Summary</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between text-gray-600">
+                    <span>Subtotal</span>
+                    <span id="summary-subtotal" class="font-semibold">$0.00</span>
+                </div>
+                <div id="discount-row" class="hidden flex justify-between text-green-600">
+                    <span>Discount</span>
+                    <span id="summary-discount">-$0.00</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
+                    <span>Tax</span>
+                    <span id="summary-tax">$0.00</span>
+                </div>
+                <div id="tip-row" class="hidden flex justify-between text-gray-600">
+                    <span>Tip</span>
+                    <span id="summary-tip">$0.00</span>
+                </div>
+                <div class="border-t pt-2 flex justify-between text-xl font-bold text-gray-900">
+                    <span>Total</span>
+                    <span id="summary-total">$0.00</span>
+                </div>
+            </div>
+
+            <div id="payment-info" class="mt-4 pt-4 border-t">
+                <div class="flex justify-between text-gray-600">
+                    <span>Payment Method</span>
+                    <span id="payment-method" class="font-medium"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div id="error-message" class="hidden bg-white rounded-lg shadow-md p-12 text-center">
+        <div class="text-6xl mb-4">😕</div>
+        <h2 class="text-2xl font-semibold text-gray-900 mb-2">Order Not Found</h2>
+        <p class="text-gray-600 mb-6">We couldn't find an order with that reference number. Please check and try again.</p>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="hidden bg-white rounded-lg shadow-md p-12 text-center">
+        <svg class="animate-spin h-12 w-12 text-orange-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-gray-600">Loading order details...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Track order
+async function trackOrder() {
+    const orderRef = document.getElementById('order-ref-input').value.trim();
+
+    if (!orderRef) {
+        showToast('Please enter an order reference', 'warning');
+        return;
+    }
+
+    // Hide all sections
+    document.getElementById('order-details').classList.add('hidden');
+    document.getElementById('error-message').classList.add('hidden');
+    document.getElementById('loading').classList.remove('hidden');
+
+    try {
+        const response = await api.trackOrder(orderRef);
+        const order = response.data;
+
+        displayOrder(order);
+    } catch (error) {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('error-message').classList.remove('hidden');
+    }
+}
+
+// Display order details
+function displayOrder(order) {
+    // Hide loading, show order details
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('order-details').classList.remove('hidden');
+
+    // Order header
+    document.getElementById('order-ref').textContent = order.order_ref;
+    document.getElementById('order-date').textContent = `Placed on ${new Date(order.created_at).toLocaleString()}`;
+
+    // Status badge
+    const statusBadge = document.getElementById('order-status-badge');
+    const statusInfo = getStatusInfo(order.current_status_name);
+    statusBadge.textContent = statusInfo.text;
+    statusBadge.className = `inline-block px-4 py-2 rounded-full text-sm font-semibold ${statusInfo.class}`;
+
+    // Customer info
+    document.getElementById('customer-name').textContent = order.cust_name || 'N/A';
+    document.getElementById('customer-phone').textContent = formatPhone(order.order_phone);
+    document.getElementById('customer-address').textContent = 'Address on file';
+
+    // Status timeline
+    renderStatusTimeline(order.status_history);
+
+    // Order items
+    renderOrderItems(order.items);
+
+    // Order summary
+    renderOrderSummary(order);
+}
+
+// Get status display info
+function getStatusInfo(status) {
+    const statusMap = {
+        'Pending': { text: 'Pending', class: 'bg-yellow-100 text-yellow-800' },
+        'Confirmed': { text: 'Confirmed', class: 'bg-blue-100 text-blue-800' },
+        'Preparing': { text: 'Preparing', class: 'bg-purple-100 text-purple-800' },
+        'Ready': { text: 'Ready for Pickup', class: 'bg-indigo-100 text-indigo-800' },
+        'Out for Delivery': { text: 'Out for Delivery', class: 'bg-orange-100 text-orange-800' },
+        'Delivered': { text: 'Delivered', class: 'bg-green-100 text-green-800' },
+        'Cancelled': { text: 'Cancelled', class: 'bg-red-100 text-red-800' }
+    };
+    return statusMap[status] || { text: status, class: 'bg-gray-100 text-gray-800' };
+}
+
+// Render status timeline
+function renderStatusTimeline(history) {
+    const container = document.getElementById('status-timeline');
+
+    if (!history || history.length === 0) {
+        container.innerHTML = '<p class="text-gray-600">No status updates available</p>';
+        return;
+    }
+
+    container.innerHTML = history.map((item, index) => {
+        const isLatest = index === history.length - 1;
+        const statusInfo = getStatusInfo(item.status_name);
+
+        return `
+            <div class="flex">
+                <div class="flex flex-col items-center mr-4">
+                    <div class="w-8 h-8 rounded-full ${isLatest ? 'bg-orange-600' : 'bg-gray-300'} flex items-center justify-center">
+                        ${isLatest ? '<svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>' : ''}
+                    </div>
+                    ${index < history.length - 1 ? '<div class="w-0.5 h-full bg-gray-300 flex-1"></div>' : ''}
+                </div>
+                <div class="flex-1 pb-8">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-semibold text-gray-900">${item.status_name}</span>
+                        <span class="text-sm text-gray-600">${new Date(item.changed_at).toLocaleString()}</span>
+                    </div>
+                    ${item.note ? `<p class="text-sm text-gray-600">${item.note}</p>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Render order items
+function renderOrderItems(items) {
+    const container = document.getElementById('order-items');
+
+    container.innerHTML = items.map(item => `
+        <div class="flex justify-between items-start py-3 border-b last:border-b-0">
+            <div class="flex-1">
+                <div class="font-medium text-gray-900">${item.name}</div>
+                ${item.is_catering && item.catering_size ? `
+                    <span class="inline-block mt-1 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                        Catering - ${item.catering_size.charAt(0).toUpperCase() + item.catering_size.slice(1)}
+                    </span>
+                ` : ''}
+                <div class="text-sm text-gray-600 mt-1">Quantity: ${item.quantity}</div>
+                ${item.special_instructions ? `
+                    <div class="text-sm text-gray-600 mt-1 italic">Note: ${item.special_instructions}</div>
+                ` : ''}
+            </div>
+            <div class="text-right">
+                <div class="font-semibold text-gray-900">${formatCurrency(parseFloat(item.line_total))}</div>
+                <div class="text-sm text-gray-600">${formatCurrency(parseFloat(item.unit_price))} each</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Render order summary
+function renderOrderSummary(order) {
+    document.getElementById('summary-subtotal').textContent = formatCurrency(parseFloat(order.subtotal));
+    document.getElementById('summary-tax').textContent = formatCurrency(parseFloat(order.tax_amount || 0));
+
+    // Discount
+    if (order.discount_amount && parseFloat(order.discount_amount) > 0) {
+        document.getElementById('discount-row').classList.remove('hidden');
+        document.getElementById('summary-discount').textContent = '-' + formatCurrency(parseFloat(order.discount_amount));
+    }
+
+    // Tip
+    if (order.tip_amount && parseFloat(order.tip_amount) > 0) {
+        document.getElementById('tip-row').classList.remove('hidden');
+        document.getElementById('summary-tip').textContent = formatCurrency(parseFloat(order.tip_amount));
+    }
+
+    document.getElementById('summary-total').textContent = formatCurrency(parseFloat(order.total_amount));
+
+    // Payment method - currently not returned in API, show status instead
+    document.getElementById('payment-method').textContent = order.payment_status || 'Pending';
+}
+
+// Handle Enter key in input
+document.getElementById('order-ref-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        trackOrder();
+    }
+});
+
+// Check for order reference in URL
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderRef = urlParams.get('ref');
+
+    if (orderRef) {
+        document.getElementById('order-ref-input').value = orderRef;
+        trackOrder();
+    }
+});
+</script>
+{% endblock %}

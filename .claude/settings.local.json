@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(psql:*)",
+      "Bash(python -m src.database.migrate:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

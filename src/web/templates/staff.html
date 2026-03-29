@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Interface - Cloud Kitchen{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Staff Interface</h1>
+                <p class="mt-2 text-gray-600">Phone order management</p>
+            </div>
+            <div id="staff-info" class="text-right">
+                <p class="text-sm text-gray-600">Logged in as</p>
+                <p class="font-semibold text-gray-900" id="staff-name"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Customer Lookup & Order Form -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Customer Lookup -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Customer Lookup</h2>
+
+                <div class="flex space-x-4 mb-4">
+                    <input
+                        type="tel"
+                        id="phone-lookup"
+                        placeholder="Enter phone number (10 digits)"
+                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                    <button onclick="lookupCustomer()" class="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition">
+                        Search
+                    </button>
+                </div>
+
+                <div id="customer-info" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h3 class="font-semibold text-gray-900 mb-2">Customer Found</h3>
+                    <div class="space-y-1 text-sm">
+                        <p><span class="text-gray-600">Name:</span> <span id="found-name" class="font-medium"></span></p>
+                        <p><span class="text-gray-600">Phone:</span> <span id="found-phone" class="font-medium"></span></p>
+                        <p><span class="text-gray-600">Email:</span> <span id="found-email" class="font-medium"></span></p>
+                        <p><span class="text-gray-600">Address:</span> <span id="found-address" class="font-medium"></span></p>
+                    </div>
+                    <button onclick="useCustomer()" class="mt-3 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium">
+                        Use This Customer
+                    </button>
+                </div>
+
+                <div id="new-customer-prompt" class="hidden p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p class="text-sm text-gray-700 mb-3">No customer found with this phone number. Create a new customer?</p>
+                    <button onclick="showNewCustomerForm()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium">
+                        Create New Customer
+                    </button>
+                </div>
+            </div>
+
+            <!-- New Customer Form -->
+            <div id="new-customer-form" class="hidden bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">New Customer Information</h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                        <input type="text" id="new-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                        <input type="tel" id="new-phone" required readonly class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email (Optional)</label>
+                        <input type="email" id="new-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Address *</label>
+                        <textarea id="new-address" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"></textarea>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="createCustomer()" class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium">
+                            Create & Continue
+                        </button>
+                        <button onclick="cancelNewCustomer()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Items -->
+            <div id="menu-section" class="hidden bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Add Items to Order</h2>
+
+                <!-- Category Filter -->
+                <div id="category-filters" class="flex flex-wrap gap-2 mb-4">
+                    <!-- Categories will be inserted here -->
+                </div>
+
+                <!-- Menu Items -->
+                <div id="menu-items" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                    <!-- Items will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Order -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Current Order</h2>
+
+                <div id="order-customer" class="hidden mb-4 pb-4 border-b">
+                    <p class="text-sm text-gray-600">Customer</p>
+                    <p class="font-medium text-gray-900" id="order-customer-name"></p>
+                    <p class="text-sm text-gray-600" id="order-customer-phone"></p>
+                </div>
+
+                <div id="order-items" class="space-y-3 mb-4 pb-4 border-b min-h-[100px]">
+                    <p class="text-gray-500 text-sm text-center py-4">No items added yet</p>
+                </div>
+
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between text-gray-600">
+                        <span>Subtotal</span>
+                        <span id="order-subtotal" class="font-semibold">$0.00</span>
+                    </div>
+                    <div class="flex justify-between text-gray-600">
+                        <span>Tax</span>
+                        <span id="order-tax">$0.00</span>
+                    </div>
+                    <div class="border-t pt-2 flex justify-between text-lg font-bold text-gray-900">
+                        <span>Total</span>
+                        <span id="order-total">$0.00</span>
+                    </div>
+                </div>
+
+                <button onclick="completeOrder()" id="complete-order-btn" class="w-full px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Complete Order
+                </button>
+
+                <button onclick="clearOrder()" class="w-full mt-2 px-6 py-3 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition">
+                    Clear Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentCustomer = null;
+let currentOrder = [];
+let menuData = { categories: [], items: [] };
+let currentFilter = 'all';
+
+// Initialize staff interface
+async function initStaff() {
+    const user = api.getCurrentUser();
+
+    if (!user) {
+        showToast('Please log in to access staff interface', 'warning');
+        window.location.href = '/login?redirect=/staff';
+        return;
+    }
+
+    if (user.role !== 'staff' && user.role !== 'admin') {
+        showToast('Access denied. Staff only.', 'error');
+        window.location.href = '/';
+        return;
+    }
+
+    document.getElementById('staff-name').textContent = user.username;
+
+    // Load menu data
+    try {
+        const response = await api.getMenu();
+        menuData = response.data;
+        renderCategoryFilters();
+    } catch (error) {
+        handleAPIError(error);
+    }
+}
+
+// Lookup customer by phone
+async function lookupCustomer() {
+    const phone = document.getElementById('phone-lookup').value.trim();
+
+    if (!validatePhone(phone)) {
+        showToast('Please enter a valid 10-digit phone number', 'warning');
+        return;
+    }
+
+    try {
+        const response = await api.lookupCustomer(phone);
+        const customer = response.data;
+
+        // Show customer info
+        document.getElementById('found-name').textContent = customer.cust_name;
+        document.getElementById('found-phone').textContent = formatPhone(customer.cust_phone);
+        document.getElementById('found-email').textContent = customer.cust_email || 'N/A';
+        document.getElementById('found-address').textContent = customer.cust_address;
+
+        document.getElementById('customer-info').classList.remove('hidden');
+        document.getElementById('new-customer-prompt').classList.add('hidden');
+
+        currentCustomer = customer;
+
+    } catch (error) {
+        // Customer not found
+        document.getElementById('customer-info').classList.add('hidden');
+        document.getElementById('new-customer-prompt').classList.remove('hidden');
+        document.getElementById('new-phone').value = phone;
+    }
+}
+
+// Use found customer
+function useCustomer() {
+    document.getElementById('order-customer').classList.remove('hidden');
+    document.getElementById('order-customer-name').textContent = currentCustomer.cust_name;
+    document.getElementById('order-customer-phone').textContent = formatPhone(currentCustomer.cust_phone);
+
+    document.getElementById('menu-section').classList.remove('hidden');
+    renderMenuItems();
+
+    showToast('Customer selected. Add items to order.', 'success');
+}
+
+// Show new customer form
+function showNewCustomerForm() {
+    document.getElementById('new-customer-form').classList.remove('hidden');
+}
+
+// Cancel new customer
+function cancelNewCustomer() {
+    document.getElementById('new-customer-form').classList.add('hidden');
+    document.getElementById('new-customer-prompt').classList.add('hidden');
+}
+
+// Create new customer
+async function createCustomer() {
+    const name = document.getElementById('new-name').value.trim();
+    const phone = document.getElementById('new-phone').value.trim();
+    const email = document.getElementById('new-email').value.trim();
+    const address = document.getElementById('new-address').value.trim();
+
+    if (!name || !phone || !address) {
+        showToast('Please fill in all required fields', 'warning');
+        return;
+    }
+
+    try {
+        const response = await api.createCustomer({
+            name: name,
+            phone: phone,
+            email: email || null,
+            address: address
+        });
+
+        currentCustomer = response.data;
+
+        document.getElementById('new-customer-form').classList.add('hidden');
+        document.getElementById('new-customer-prompt').classList.add('hidden');
+
+        useCustomer();
+
+    } catch (error) {
+        handleAPIError(error);
+    }
+}
+
+// Render category filters
+function renderCategoryFilters() {
+    const container = document.getElementById('category-filters');
+    container.innerHTML = `
+        <button onclick="filterMenuCategory('all')" class="menu-cat-btn px-3 py-1 rounded-lg text-sm font-medium transition bg-orange-600 text-white" data-category="all">All</button>
+    `;
+
+    menuData.categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.onclick = () => filterMenuCategory(cat.cat_name);
+        btn.className = 'menu-cat-btn px-3 py-1 rounded-lg text-sm font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300';
+        btn.setAttribute('data-category', cat.cat_name);
+        btn.textContent = cat.cat_name;
+        container.appendChild(btn);
+    });
+}
+
+// Filter menu category
+function filterMenuCategory(category) {
+    currentFilter = category;
+
+    document.querySelectorAll('.menu-cat-btn').forEach(btn => {
+        const isActive = btn.getAttribute('data-category') === category;
+        btn.className = `menu-cat-btn px-3 py-1 rounded-lg text-sm font-medium transition ${
+            isActive ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+        }`;
+    });
+
+    renderMenuItems();
+}
+
+// Render menu items
+function renderMenuItems() {
+    const container = document.getElementById('menu-items');
+    let items = menuData.items;
+
+    if (currentFilter !== 'all') {
+        items = items.filter(item => item.cat_name === currentFilter);
+    }
+
+    container.innerHTML = items.map(item => `
+        <div class="border rounded-lg p-3 hover:bg-gray-50">
+            <div class="flex justify-between items-start mb-2">
+                <h4 class="font-medium text-gray-900">${item.kic_name}</h4>
+                <span class="text-orange-600 font-semibold">${formatCurrency(item.kic_price)}</span>
+            </div>
+            <button onclick='addItemToOrder(${JSON.stringify(item)})' class="w-full px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm">
+                Add to Order
+            </button>
+        </div>
+    `).join('');
+}
+
+// Add item to order
+function addItemToOrder(item) {
+    const quantity = parseInt(prompt('Quantity:', '1'));
+    if (!quantity || quantity < 1) return;
+
+    const instructions = prompt('Special instructions (optional):', '') || '';
+
+    currentOrder.push({
+        kic_id: item.kic_id,
+        name: item.kic_name,
+        price: item.kic_price,
+        quantity: quantity,
+        special_instructions: instructions,
+        is_catering: false,
+        catering_size: null
+    });
+
+    renderOrder();
+    showToast(`${item.kic_name} added to order`, 'success');
+}
+
+// Render current order
+function renderOrder() {
+    const container = document.getElementById('order-items');
+
+    if (currentOrder.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No items added yet</p>';
+        document.getElementById('complete-order-btn').disabled = true;
+        updateOrderTotal();
+        return;
+    }
+
+    document.getElementById('complete-order-btn').disabled = false;
+
+    container.innerHTML = currentOrder.map((item, index) => `
+        <div class="flex justify-between items-start text-sm">
+            <div class="flex-1">
+                <div class="font-medium">${item.name}</div>
+                <div class="text-gray-600">Qty: ${item.quantity} × ${formatCurrency(item.price)}</div>
+            </div>
+            <button onclick="removeFromOrder(${index})" class="text-red-600 hover:text-red-800 ml-2">✕</button>
+        </div>
+    `).join('');
+
+    updateOrderTotal();
+}
+
+// Remove from order
+function removeFromOrder(index) {
+    currentOrder.splice(index, 1);
+    renderOrder();
+}
+
+// Update order total
+function updateOrderTotal() {
+    const subtotal = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = 0;
+    const total = subtotal + tax;
+
+    document.getElementById('order-subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('order-tax').textContent = formatCurrency(tax);
+    document.getElementById('order-total').textContent = formatCurrency(total);
+}
+
+// Complete order
+async function completeOrder() {
+    if (!currentCustomer) {
+        showToast('Please select a customer first', 'warning');
+        return;
+    }
+
+    if (currentOrder.length === 0) {
+        showToast('Please add items to the order', 'warning');
+        return;
+    }
+
+    const paymentMethod = confirm('Payment Method:\nOK = Cash\nCancel = Card') ? 'cash' : 'card';
+
+    try {
+        const orderData = {
+            customer: {
+                name: currentCustomer.cust_name,
+                phone: currentCustomer.cust_phone,
+                email: currentCustomer.cust_email,
+                address: currentCustomer.cust_address
+            },
+            items: currentOrder.map(item => ({
+                kic_id: item.kic_id,
+                quantity: item.quantity,
+                special_instructions: item.special_instructions,
+                is_catering: item.is_catering,
+                catering_size: item.catering_size
+            })),
+            payment_method: paymentMethod,
+            discount: null,
+            tip_amount: 0
+        };
+
+        const response = await api.createOrder(orderData);
+        const order = response.data;
+
+        showToast(`Order ${order.order_ref} created successfully!`, 'success');
+
+        // Clear order
+        clearOrder();
+
+    } catch (error) {
+        handleAPIError(error);
+    }
+}
+
+// Clear order
+function clearOrder() {
+    currentCustomer = null;
+    currentOrder = [];
+
+    document.getElementById('phone-lookup').value = '';
+    document.getElementById('customer-info').classList.add('hidden');
+    document.getElementById('new-customer-prompt').classList.add('hidden');
+    document.getElementById('new-customer-form').classList.add('hidden');
+    document.getElementById('order-customer').classList.add('hidden');
+    document.getElementById('menu-section').classList.add('hidden');
+
+    renderOrder();
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', initStaff);
+
+// Handle Enter key
+document.getElementById('phone-lookup').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') lookupCustomer();
+});
+</script>
+{% endblock %}

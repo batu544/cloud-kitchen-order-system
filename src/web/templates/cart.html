@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - Cloud Kitchen{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 class="text-3xl font-bold text-gray-900">Shopping Cart</h1>
+        <p class="mt-2 text-gray-600">Review your items before checkout</p>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Cart Items -->
+        <div class="lg:col-span-2">
+            <div id="cart-items" class="space-y-4">
+                <!-- Items will be rendered here -->
+            </div>
+
+            <div id="empty-cart" class="hidden bg-white rounded-lg shadow-md p-12 text-center">
+                <div class="text-6xl mb-4">🛒</div>
+                <h2 class="text-2xl font-semibold text-gray-900 mb-2">Your cart is empty</h2>
+                <p class="text-gray-600 mb-6">Add some delicious items from our menu!</p>
+                <a href="/menu" class="inline-block px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition">
+                    Browse Menu
+                </a>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="lg:col-span-1">
+            <div id="order-summary" class="bg-white rounded-lg shadow-md p-6 sticky top-4">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
+
+                <div class="space-y-3 mb-4">
+                    <div class="flex justify-between text-gray-600">
+                        <span>Subtotal</span>
+                        <span id="subtotal" class="font-semibold">$0.00</span>
+                    </div>
+                    <div class="flex justify-between text-gray-600">
+                        <span>Tax</span>
+                        <span id="tax">$0.00</span>
+                    </div>
+                    <div class="border-t pt-3 flex justify-between text-lg font-bold text-gray-900">
+                        <span>Total</span>
+                        <span id="total">$0.00</span>
+                    </div>
+                </div>
+
+                <button onclick="proceedToCheckout()" id="checkout-btn" class="w-full px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Proceed to Checkout
+                </button>
+
+                <a href="/menu" class="block mt-3 text-center text-orange-600 hover:text-orange-700 font-medium">
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Render cart items
+function renderCart() {
+    const items = cart.getItems();
+    const cartItemsContainer = document.getElementById('cart-items');
+    const emptyCart = document.getElementById('empty-cart');
+    const checkoutBtn = document.getElementById('checkout-btn');
+
+    if (items.length === 0) {
+        cartItemsContainer.innerHTML = '';
+        emptyCart.classList.remove('hidden');
+        checkoutBtn.disabled = true;
+        updateSummary();
+        return;
+    }
+
+    emptyCart.classList.add('hidden');
+    checkoutBtn.disabled = false;
+
+    cartItemsContainer.innerHTML = items.map((item, index) => {
+        // Price is already calculated for catering items (no need to recalculate)
+        const itemTotal = item.price * item.quantity;
+
+        return `
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">${item.name}</h3>
+                                ${item.is_catering ? `
+                                    <span class="inline-block mt-1 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                        Catering - ${item.catering_size.charAt(0).toUpperCase() + item.catering_size.slice(1)} Tray
+                                    </span>
+                                ` : ''}
+                            </div>
+                            <button onclick="removeItem(${index})" class="text-red-600 hover:text-red-800 ml-4">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        ${item.special_instructions ? `
+                            <div class="mt-2 mb-3">
+                                <p class="text-sm text-gray-600"><span class="font-medium">Special instructions:</span> ${item.special_instructions}</p>
+                                <button onclick="editInstructions(${index})" class="text-xs text-orange-600 hover:text-orange-700 mt-1">Edit</button>
+                            </div>
+                        ` : `
+                            <button onclick="editInstructions(${index})" class="text-sm text-orange-600 hover:text-orange-700 mt-2">Add special instructions</button>
+                        `}
+
+                        <div class="flex items-center justify-between mt-4">
+                            <div class="flex items-center space-x-3">
+                                <button onclick="updateQuantity(${index}, -1)" class="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 font-semibold">-</button>
+                                <input type="number" value="${item.quantity}" min="1" onchange="setQuantity(${index}, this.value)" class="w-16 text-center px-2 py-1 border border-gray-300 rounded">
+                                <button onclick="updateQuantity(${index}, 1)" class="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 font-semibold">+</button>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-gray-600">${formatCurrency(item.price)} each</div>
+                                <div class="text-xl font-bold text-orange-600">${formatCurrency(itemTotal)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    updateSummary();
+}
+
+// Update order summary
+function updateSummary() {
+    const subtotal = cart.calculateSubtotal();
+    const tax = 0; // No tax per user requirement
+    const total = subtotal + tax;
+
+    document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('tax').textContent = formatCurrency(tax);
+    document.getElementById('total').textContent = formatCurrency(total);
+}
+
+// Update item quantity
+function updateQuantity(index, delta) {
+    const items = cart.getItems();
+    const newQuantity = items[index].quantity + delta;
+    if (newQuantity > 0) {
+        cart.updateQuantity(index, newQuantity);
+        renderCart();
+    }
+}
+
+// Set quantity directly
+function setQuantity(index, value) {
+    const quantity = parseInt(value);
+    if (quantity > 0) {
+        cart.updateQuantity(index, quantity);
+        renderCart();
+    } else {
+        renderCart(); // Reset to previous value
+    }
+}
+
+// Remove item
+function removeItem(index) {
+    const items = cart.getItems();
+    if (confirm(`Remove ${items[index].name} from cart?`)) {
+        cart.removeItem(index);
+        renderCart();
+        showToast('Item removed from cart', 'success');
+    }
+}
+
+// Edit special instructions
+function editInstructions(index) {
+    const items = cart.getItems();
+    const currentInstructions = items[index].special_instructions || '';
+
+    const newInstructions = prompt('Special instructions:', currentInstructions);
+
+    if (newInstructions !== null) {
+        cart.updateInstructions(index, newInstructions.trim());
+        renderCart();
+        showToast('Instructions updated', 'success');
+    }
+}
+
+// Proceed to checkout
+function proceedToCheckout() {
+    if (cart.getItemCount() === 0) {
+        showToast('Your cart is empty', 'warning');
+        return;
+    }
+
+    window.location.href = '/checkout';
+}
+
+// Listen for cart updates
+window.addEventListener('cartUpdated', () => {
+    renderCart();
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    renderCart();
+});
+</script>
+{% endblock %}
