@@ -1,5 +1,6 @@
 """Menu repository for categories and items."""
 from typing import Optional, Dict, List
+from datetime import datetime
 from src.repositories.base import BaseRepository
 from src.database.connection import get_db_cursor
 
@@ -153,7 +154,7 @@ class MenuRepository(BaseRepository):
         Returns:
             True if successful
         """
-        data = {'updated_at': 'CURRENT_TIMESTAMP'}
+        data = {'updated_at': datetime.now()}
 
         if name is not None:
             data['kic_name'] = name

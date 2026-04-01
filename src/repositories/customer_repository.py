@@ -1,5 +1,6 @@
 """Customer repository."""
 from typing import Optional, Dict, List
+from datetime import datetime
 from src.repositories.base import BaseRepository
 from src.database.connection import get_db_cursor
 
@@ -70,7 +71,7 @@ class CustomerRepository(BaseRepository):
         Returns:
             True if successful
         """
-        data = {'updated_at': 'CURRENT_TIMESTAMP'}
+        data = {'updated_at': datetime.now()}
         if name:
             data['cust_name'] = name
         if email:

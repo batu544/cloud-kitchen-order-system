@@ -13,9 +13,11 @@ class PaymentRepository(BaseRepository):
 
     def create_payment(self, order_id: int, amount: Decimal, payment_method: str,
                       payment_status: str, tip_amount: Decimal = Decimal('0'),
-                      payment_notes: str = None, recorded_by_user_id: int = None) -> Optional[int]:
+                      payment_notes: str = None, recorded_by_user_id: int = None,
+                      override_amount: Decimal = None, override_reason: str = None,
+                      override_by_user_id: int = None) -> Optional[int]:
         """
-        Create a payment record.
+        Create a payment record with optional override fields.
 
         Args:
             order_id: Order ID
@@ -25,6 +27,9 @@ class PaymentRepository(BaseRepository):
             tip_amount: Tip amount
             payment_notes: Optional notes
             recorded_by_user_id: User recording the payment
+            override_amount: Optional override amount for final payment adjustment
+            override_reason: Reason for override (required if override_amount provided)
+            override_by_user_id: User who authorized the override
 
         Returns:
             New payment ID or None
@@ -36,7 +41,10 @@ class PaymentRepository(BaseRepository):
             'payment_status': payment_status,
             'tip_amount': tip_amount,
             'payment_notes': payment_notes,
-            'recorded_by_user_id': recorded_by_user_id
+            'recorded_by_user_id': recorded_by_user_id,
+            'override_amount': override_amount,
+            'override_reason': override_reason,
+            'override_by_user_id': override_by_user_id
         }
         return self.insert(data)
 

@@ -1,5 +1,5 @@
 """Web UI routes for serving HTML pages."""
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, redirect
 
 web_bp = Blueprint('web', __name__)
 
@@ -36,8 +36,20 @@ def track():
 
 @web_bp.route('/staff')
 def staff():
-    """Staff order placement page."""
-    return render_template('staff.html')
+    """Redirect old staff route to new dashboard."""
+    return redirect('/staff/dashboard')
+
+
+@web_bp.route('/staff/dashboard')
+def staff_dashboard():
+    """Staff dashboard - main landing page for staff."""
+    return render_template('staff_dashboard.html')
+
+
+@web_bp.route('/staff/orders/<int:order_id>')
+def staff_order_detail(order_id):
+    """Staff order detail and edit page."""
+    return render_template('staff_order_detail.html')
 
 
 @web_bp.route('/login')

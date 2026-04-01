@@ -1,6 +1,9 @@
 """Flask application factory."""
 import logging
+import datetime
+from decimal import Decimal
 from flask import Flask
+from flask.json.provider import DefaultJSONProvider
 from flask_cors import CORS
 from config import Config
 from src.middleware.error_handler import register_error_handlers
@@ -10,6 +13,17 @@ from src.api.orders import orders_bp
 from src.api.payments import payments_bp
 from src.api.reports import reports_bp
 from src.api.web_routes import web_bp
+
+
+class CustomJSONProvider(DefaultJSONProvider):
+    """JSON provider that handles datetime and Decimal types."""
+
+    def default(self, obj):
+        if isinstance(obj, (datetime.datetime, datetime.date)):
+            return obj.isoformat()
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super().default(obj)
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +42,8 @@ def create_app(config_class=Config):
     app = Flask(__name__,
                 static_folder='web/static',
                 template_folder='web/templates')
+    app.json_provider_class = CustomJSONProvider
+    app.json = CustomJSONProvider(app)
 
     # Load configuration
     app.config.from_object(config_class)

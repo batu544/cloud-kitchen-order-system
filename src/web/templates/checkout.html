@@ -45,11 +45,6 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Email (Optional)</label>
                             <input type="email" id="customer-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="john@example.com">
                         </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Address *</label>
-                            <textarea id="customer-address" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="123 Main St, Apt 4B, City, State 12345"></textarea>
-                        </div>
                     </div>
                 </div>
 
@@ -99,13 +94,6 @@
                             <div class="flex-1">
                                 <div class="font-medium">Cash on Delivery</div>
                                 <div class="text-sm text-gray-600">Pay with cash when your order arrives</div>
-                            </div>
-                        </label>
-                        <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50">
-                            <input type="radio" name="payment-method" value="card" class="mr-3">
-                            <div class="flex-1">
-                                <div class="font-medium">Credit/Debit Card</div>
-                                <div class="text-sm text-gray-600">Pay with card on delivery</div>
                             </div>
                         </label>
                     </div>
@@ -173,7 +161,7 @@ let currentDiscount = null;
 let currentTip = 0;
 
 // Initialize checkout page
-function initCheckout() {
+async function initCheckout() {
     // Check if cart is empty
     if (cart.getItemCount() === 0) {
         showToast('Your cart is empty', 'warning');
@@ -181,16 +169,42 @@ function initCheckout() {
         return;
     }
 
-    // Show login prompt for guest users
+    // Show login prompt for guest users or prefill for logged-in users
     const user = api.getCurrentUser();
     if (!user) {
         document.getElementById('login-prompt').classList.remove('hidden');
     } else {
         // Pre-fill customer info for logged-in users
-        // This would require additional API endpoint to get user details
+        await prefillUserInfo();
     }
 
     renderOrderSummary();
+}
+
+// Prefill user information for logged-in users
+async function prefillUserInfo() {
+    try {
+        const response = await api.getUserDetails();
+        const userDetails = response.data;
+
+        // Prefill name from customer name
+        if (userDetails.cust_name) {
+            document.getElementById('customer-name').value = userDetails.cust_name;
+        }
+
+        // Prefill phone
+        if (userDetails.phone) {
+            document.getElementById('customer-phone').value = userDetails.phone;
+        }
+
+        // Prefill email if available
+        if (userDetails.email) {
+            document.getElementById('customer-email').value = userDetails.email;
+        }
+    } catch (error) {
+        console.error('Failed to load user details:', error);
+        // Don't show error to user, just skip prefilling
+    }
 }
 
 // Render order summary
@@ -336,7 +350,6 @@ function setCustomTip() {
 function validateForm() {
     const name = document.getElementById('customer-name').value.trim();
     const phone = document.getElementById('customer-phone').value.trim();
-    const address = document.getElementById('customer-address').value.trim();
 
     if (!name) {
         showToast('Please enter your name', 'warning');
@@ -345,11 +358,6 @@ function validateForm() {
 
     if (!phone || !validatePhone(phone)) {
         showToast('Please enter a valid 10-digit phone number', 'warning');
-        return false;
-    }
-
-    if (!address) {
-        showToast('Please enter your delivery address', 'warning');
         return false;
     }
 
@@ -371,8 +379,7 @@ async function placeOrder() {
         const customerInfo = {
             name: document.getElementById('customer-name').value.trim(),
             phone: document.getElementById('customer-phone').value.trim(),
-            email: document.getElementById('customer-email').value.trim() || null,
-            address: document.getElementById('customer-address').value.trim()
+            email: document.getElementById('customer-email').value.trim() || null
         };
 
         // Prepare discount info
@@ -401,7 +408,7 @@ async function placeOrder() {
 
         // Redirect to tracking page
         setTimeout(() => {
-            window.location.href = `/track?ref=${order.order_ref}`;
+            window.location.href = `/track?id=${order.order_id}`;
         }, 1500);
 
     } catch (error) {

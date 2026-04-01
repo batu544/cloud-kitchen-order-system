@@ -77,6 +77,10 @@ class APIClient {
         return !!this.token;
     }
 
+    async getUserDetails() {
+        return this.request('/auth/me');
+    }
+
     // Menu methods
     async getMenu(filters = {}) {
         const params = new URLSearchParams(filters);
@@ -99,8 +103,8 @@ class APIClient {
         return this.request(`/orders/${orderId}`);
     }
 
-    async trackOrder(orderRef) {
-        return this.request(`/orders/track/${orderRef}`);
+    async trackOrder(orderId) {
+        return this.request(`/orders/track/${orderId}`);
     }
 
     async phoneLookup(phone) {
@@ -119,6 +123,92 @@ class APIClient {
         return this.request(`/payments/orders/${orderId}/payments`, {
             method: 'POST',
             body: JSON.stringify(paymentData)
+        });
+    }
+
+    // Staff Dashboard methods
+    async getDailyOrders(date, page, perPage, status) {
+        const params = new URLSearchParams({
+            ...(date && {date}),
+            ...(page && {page}),
+            ...(perPage && {per_page: perPage}),
+            ...(status && {status})
+        });
+        return this.request(`/orders/daily?${params}`);
+    }
+
+    async bulkUpdateStatus(orderIds, statusId, note) {
+        return this.request('/orders/bulk-status', {
+            method: 'PUT',
+            body: JSON.stringify({
+                order_ids: orderIds,
+                status_id: statusId,
+                note
+            })
+        });
+    }
+
+    // Order Item Management methods
+    async updateOrderItem(orderId, itemId, updates) {
+        return this.request(`/orders/${orderId}/items/${itemId}`, {
+            method: 'PUT',
+            body: JSON.stringify(updates)
+        });
+    }
+
+    async removeOrderItem(orderId, itemId, reason) {
+        return this.request(`/orders/${orderId}/items/${itemId}`, {
+            method: 'DELETE',
+            body: JSON.stringify({ reason })
+        });
+    }
+
+    async addOrderItem(orderId, itemData) {
+        return this.request(`/orders/${orderId}/items`, {
+            method: 'POST',
+            body: JSON.stringify(itemData)
+        });
+    }
+
+    async updateOrder(orderId, updates) {
+        return this.request(`/orders/${orderId}`, {
+            method: 'PUT',
+            body: JSON.stringify(updates)
+        });
+    }
+
+    async updateOrderStatus(orderId, data) {
+        return this.request(`/orders/${orderId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async getOrderHistory(orderId, entityType) {
+        const params = new URLSearchParams({
+            ...(entityType && {entity_type: entityType})
+        });
+        return this.request(`/orders/${orderId}/history?${params}`);
+    }
+
+    // Helper method to get all statuses
+    async getAllStatuses() {
+        // Fetch from menu endpoint which has status info, or create dedicated endpoint
+        return this.request('/orders/recent?limit=1').then(response => {
+            // This is a workaround - ideally create GET /api/statuses endpoint
+            // For now, we'll define statuses client-side
+            return {
+                success: true,
+                data: [
+                    {status_id: 1, status_name: 'Pending'},
+                    {status_id: 2, status_name: 'Confirmed'},
+                    {status_id: 3, status_name: 'Preparing'},
+                    {status_id: 4, status_name: 'Ready'},
+                    {status_id: 5, status_name: 'Delivered'},
+                    {status_id: 6, status_name: 'Completed'},
+                    {status_id: 7, status_name: 'Cancelled'}
+                ]
+            };
         });
     }
 }

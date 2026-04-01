@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details - Staff - Cloud Kitchen{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <a href="/staff/dashboard" class="text-gray-600 hover:text-gray-900">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                </a>
+                <div>
+                    <h1 id="order-title" class="text-3xl font-bold text-gray-900">Order #<span id="order-id"></span></h1>
+                    <p id="order-subtitle" class="mt-1 text-sm text-gray-600"></p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="window.print()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                    Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Order Information Card -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Information</h2>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="text-gray-600">Reference</p>
+                        <p id="order-ref" class="font-medium text-gray-900"></p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Date & Time</p>
+                        <p id="order-date" class="font-medium text-gray-900"></p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Customer</p>
+                        <p id="customer-name" class="font-medium text-gray-900"></p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Phone</p>
+                        <p id="customer-phone" class="font-medium text-gray-900"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items Card -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Order Items</h2>
+                    <button onclick="showAddItemModal()" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition">
+                        + Add Item
+                    </button>
+                </div>
+                <div id="order-items" class="space-y-3">
+                    <!-- Items will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Edit History Card -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Edit History</h2>
+                <div id="edit-history" class="space-y-4">
+                    <!-- History entries will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Order Totals Card -->
+            <div class="bg-white rounded-lg shadow p-6 sticky top-4">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between text-gray-600">
+                        <span>Subtotal</span>
+                        <span id="summary-subtotal" class="font-semibold">$0.00</span>
+                    </div>
+                    <div id="discount-row" class="hidden flex justify-between text-green-600">
+                        <span>Discount</span>
+                        <span id="summary-discount">-$0.00</span>
+                    </div>
+                    <div class="flex justify-between text-gray-600">
+                        <span>Tax</span>
+                        <span id="summary-tax">$0.00</span>
+                    </div>
+                    <div id="tip-row" class="hidden flex justify-between text-gray-600">
+                        <span>Tip</span>
+                        <span id="summary-tip">$0.00</span>
+                    </div>
+                    <div class="border-t pt-2 flex justify-between text-lg font-bold text-gray-900">
+                        <span>Total</span>
+                        <span id="summary-total">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Management Card -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Status</h2>
+                <div class="mb-4">
+                    <span id="current-status-badge" class="px-3 py-1 rounded-full text-sm font-semibold"></span>
+                </div>
+                <div class="space-y-3">
+                    <select id="new-status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                        <option value="">Select new status...</option>
+                    </select>
+                    <textarea id="status-note" placeholder="Optional note..." rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"></textarea>
+                    <button onclick="updateStatus()" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium">
+                        Update Status
+                    </button>
+                </div>
+            </div>
+
+            <!-- Payment Card -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Payment</h2>
+                <div class="mb-4">
+                    <span id="payment-status-badge" class="px-3 py-1 rounded-full text-sm font-semibold"></span>
+                </div>
+                <button onclick="showPaymentModal()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                    Record Payment
+                </button>
+                <div id="payment-history" class="mt-4 space-y-2">
+                    <!-- Payment history will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Item Modal -->
+<div id="add-item-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Add Item to Order</h3>
+                <button onclick="closeAddItemModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="menu-items-list" class="space-y-2">
+                <!-- Menu items will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="payment-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg max-w-md w-full mx-4">
+        <div class="p-6">
+            <h3 class="text-xl font-semibold mb-4">Record Payment</h3>
+            <form id="payment-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                    <input type="number" id="payment-amount" step="0.01" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                    <select id="payment-method" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
+                        <option value="cash">Cash</option>
+                        <option value="card">Card</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tip Amount (Optional)</label>
+                    <input type="number" id="tip-amount" step="0.01" min="0" value="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="use-override" class="rounded border-gray-300 text-orange-600">
+                        <span class="ml-2 text-sm text-gray-700">Override final amount</span>
+                    </label>
+                </div>
+                <div id="override-fields" class="hidden space-y-3">
+                    <input type="number" id="override-amount" step="0.01" min="0" placeholder="Override amount" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    <textarea id="override-reason" placeholder="Reason for override (required)" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg"></textarea>
+                </div>
+                <div class="flex space-x-3">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Record Payment
+                    </button>
+                    <button type="button" onclick="closePaymentModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6">
+        <svg class="animate-spin h-8 w-8 text-orange-600 mx-auto" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="mt-4 text-sm text-gray-600">Loading...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/staff-order-detail.js"></script>
+{% endblock %}

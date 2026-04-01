@@ -1,5 +1,6 @@
 """User repository for authentication and user management."""
 from typing import Optional, Dict
+from datetime import datetime
 from src.repositories.base import BaseRepository
 from src.database.connection import get_db_cursor
 
@@ -70,7 +71,7 @@ class UserRepository(BaseRepository):
         """
         return self.update(user_id, {
             'password_hash': new_password_hash,
-            'updated_at': 'CURRENT_TIMESTAMP'
+            'updated_at': datetime.now()
         })
 
     def deactivate_user(self, user_id: int) -> bool:

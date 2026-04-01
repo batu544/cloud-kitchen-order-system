@@ -242,7 +242,7 @@ ORDER BY total_spent DESC LIMIT 5;
 
 ## Testing & acceptance criteria
 - Register/login flows for user and staff.
-- Guest order creation and retrieval by order_ref.
+- Guest order creation and retrieval by order_id.
 - Staff order creation linked to existing customer by phone.
 - Correct computation of catering sizes and discounts (unit tests).
 - Payment records reflect manual status changes and tips.

@@ -13,7 +13,7 @@ payment_service = PaymentService()
 @require_role('staff', 'admin')
 def record_payment(order_id):
     """
-    Record a manual payment (staff only).
+    Record a manual payment with optional override (staff only).
 
     Headers:
         Authorization: Bearer <token>
@@ -27,11 +27,13 @@ def record_payment(order_id):
             "payment_method": "cash",  // "cash", "card", "other"
             "payment_status": "paid",  // "paid", "partially_paid"
             "tip_amount": 5.00,  // optional
-            "payment_notes": "optional notes"
+            "payment_notes": "optional notes",
+            "override_amount": 45.00,  // optional - staff can adjust final payment
+            "override_reason": "Customer discount applied"  // required if override_amount provided
         }
 
     Returns:
-        201: Payment recorded successfully
+        201: Payment recorded successfully (auto-transitions Delivered→Complete if paid)
         400: Validation error
         403: Forbidden (not staff)
         404: Order not found
@@ -46,6 +48,8 @@ def record_payment(order_id):
     payment_status = data.get('payment_status', 'paid')
     tip_amount = data.get('tip_amount', 0)
     payment_notes = data.get('payment_notes')
+    override_amount = data.get('override_amount')
+    override_reason = data.get('override_reason')
 
     # Validate required fields
     if amount is None or not payment_method:
@@ -60,7 +64,9 @@ def record_payment(order_id):
         payment_status=payment_status,
         tip_amount=float(tip_amount),
         payment_notes=payment_notes,
-        recorded_by_user_id=recorded_by_user_id
+        recorded_by_user_id=recorded_by_user_id,
+        override_amount=float(override_amount) if override_amount is not None else None,
+        override_reason=override_reason
     )
 
     if success:

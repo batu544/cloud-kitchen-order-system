@@ -263,17 +263,17 @@ class OrderService:
 
         return True, "Order found", order
 
-    def track_order(self, order_ref: str) -> Tuple[bool, str, Optional[Dict]]:
+    def track_order(self, order_id: int) -> Tuple[bool, str, Optional[Dict]]:
         """
-        Public order tracking by order reference.
+        Public order tracking by order ID.
 
         Args:
-            order_ref: Order reference string
+            order_id: Order ID
 
         Returns:
             Tuple of (success, message, order_data)
         """
-        order = self.order_repo.find_by_order_ref(order_ref)
+        order = self.order_repo.find_by_id_for_tracking(order_id)
 
         if not order:
             return False, "Order not found", None
@@ -330,3 +330,393 @@ class OrderService:
             List of orders
         """
         return self.order_repo.get_recent_orders(limit)
+
+    def get_daily_orders(
+        self,
+        date: str = None,
+        page: int = 1,
+        per_page: int = 10,
+        status_filter: int = None
+    ) -> Tuple[bool, str, Optional[Dict]]:
+        """
+        Get orders for a specific day with pagination (staff dashboard).
+
+        Args:
+            date: ISO date string (YYYY-MM-DD), defaults to today
+            page: Page number (1-indexed)
+            per_page: Items per page
+            status_filter: Optional status ID filter
+
+        Returns:
+            Tuple of (success, message, data with orders and pagination)
+        """
+        try:
+            # Default to today if no date provided
+            if not date:
+                date = datetime.now().strftime('%Y-%m-%d')
+
+            # Validate date format
+            try:
+                datetime.strptime(date, '%Y-%m-%d')
+            except ValueError:
+                return False, "Invalid date format. Use YYYY-MM-DD", None
+
+            # Get paginated orders
+            result = self.order_repo.get_orders_paginated(
+                page=page,
+                per_page=per_page,
+                date_filter=date,
+                status_filter=status_filter
+            )
+
+            return True, "Orders retrieved", {
+                'orders': result['orders'],
+                'pagination': {
+                    'total': result['total'],
+                    'page': result['page'],
+                    'per_page': result['per_page'],
+                    'total_pages': result['total_pages']
+                },
+                'date': date
+            }
+
+        except Exception as e:
+            return False, f"Failed to retrieve orders: {str(e)}", None
+
+    def edit_order_item(
+        self,
+        order_item_id: int,
+        updates: Dict,
+        changed_by_user_id: int,
+        reason: str = None
+    ) -> Tuple[bool, str, Optional[Dict]]:
+        """
+        Edit existing order item (quantity, special_instructions).
+
+        Args:
+            order_item_id: ID of order item to edit
+            updates: Dictionary with fields to update
+            changed_by_user_id: User making the change
+            reason: Reason for edit
+
+        Returns:
+            Tuple of (success, message, updated_order)
+        """
+        try:
+            # Get order item to find order_id
+            order_item = self.order_repo.find_order_item_by_id(order_item_id)
+            if not order_item:
+                return False, "Order item not found", None
+
+            order_id = order_item['order_id']
+
+            # Get order to validate status
+            order = self.order_repo.find_by_id(order_id)
+            if not order:
+                return False, "Order not found", None
+
+            # Check if order can be edited
+            statuses = self.order_repo.get_all_statuses()
+            status_names = {s['status_id']: s['status_name'] for s in statuses}
+            current_status = status_names.get(order['current_status_id'])
+
+            if current_status in ['Completed', 'Cancelled']:
+                return False, f"Cannot edit {current_status.lower()} orders", None
+
+            # Validate updates
+            if 'quantity' in updates:
+                quantity = updates['quantity']
+                if not isinstance(quantity, int) or quantity <= 0:
+                    return False, "Quantity must be a positive integer", None
+
+                # Recalculate line_total if quantity changed
+                unit_price = Decimal(str(order_item['unit_price']))
+                is_catering = order_item.get('is_catering', False)
+                catering_size = order_item.get('catering_size')
+
+                new_line_total = calculate_line_total(
+                    unit_price=unit_price,
+                    quantity=quantity,
+                    is_catering=is_catering,
+                    catering_size=catering_size
+                )
+                updates['line_total'] = new_line_total
+
+            # Update order item
+            success = self.order_repo.update_order_item(
+                order_item_id=order_item_id,
+                updates=updates,
+                changed_by_user_id=changed_by_user_id,
+                reason=reason
+            )
+
+            if not success:
+                return False, "Failed to update order item", None
+
+            # Return updated order
+            updated_order = self.order_repo.get_order_with_items(order_id)
+            return True, "Order item updated successfully", updated_order
+
+        except ValueError as e:
+            return False, str(e), None
+        except Exception as e:
+            return False, f"Failed to edit order item: {str(e)}", None
+
+    def remove_order_item(
+        self,
+        order_item_id: int,
+        changed_by_user_id: int,
+        reason: str = None
+    ) -> Tuple[bool, str, Optional[Dict]]:
+        """
+        Remove item from order (prevents removal of last item).
+
+        Args:
+            order_item_id: ID of order item to remove
+            changed_by_user_id: User making the change
+            reason: Reason for removal
+
+        Returns:
+            Tuple of (success, message, updated_order)
+        """
+        try:
+            # Get order item to find order_id
+            order_item = self.order_repo.find_order_item_by_id(order_item_id)
+            if not order_item:
+                return False, "Order item not found", None
+
+            order_id = order_item['order_id']
+
+            # Validate order status
+            order = self.order_repo.find_by_id(order_id)
+            if not order:
+                return False, "Order not found", None
+
+            statuses = self.order_repo.get_all_statuses()
+            status_names = {s['status_id']: s['status_name'] for s in statuses}
+            current_status = status_names.get(order['current_status_id'])
+
+            if current_status in ['Completed', 'Cancelled']:
+                return False, f"Cannot edit {current_status.lower()} orders", None
+
+            # Delete order item
+            success = self.order_repo.delete_order_item(
+                order_item_id=order_item_id,
+                changed_by_user_id=changed_by_user_id,
+                reason=reason
+            )
+
+            if not success:
+                return False, "Failed to remove order item", None
+
+            # Return updated order
+            updated_order = self.order_repo.get_order_with_items(order_id)
+            return True, "Order item removed successfully", updated_order
+
+        except ValueError as e:
+            return False, str(e), None
+        except Exception as e:
+            return False, f"Failed to remove order item: {str(e)}", None
+
+    def add_item_to_order(
+        self,
+        order_id: int,
+        item_data: Dict,
+        changed_by_user_id: int,
+        reason: str = None
+    ) -> Tuple[bool, str, Optional[Dict]]:
+        """
+        Add new item to existing order.
+
+        Args:
+            order_id: ID of order to add item to
+            item_data: Dictionary with kic_id, quantity, special_instructions, etc.
+            changed_by_user_id: User making the change
+            reason: Reason for adding item
+
+        Returns:
+            Tuple of (success, message, updated_order)
+        """
+        try:
+            # Validate order status
+            order = self.order_repo.find_by_id(order_id)
+            if not order:
+                return False, "Order not found", None
+
+            statuses = self.order_repo.get_all_statuses()
+            status_names = {s['status_id']: s['status_name'] for s in statuses}
+            current_status = status_names.get(order['current_status_id'])
+
+            if current_status in ['Completed', 'Cancelled']:
+                return False, f"Cannot edit {current_status.lower()} orders", None
+
+            # Validate menu item
+            kic_id = item_data.get('kic_id')
+            if not kic_id:
+                return False, "Menu item ID (kic_id) is required", None
+
+            menu_item = self.menu_repo.find_by_id(kic_id)
+            if not menu_item:
+                return False, "Menu item not found", None
+
+            if not menu_item.get('is_active', False):
+                return False, f"Menu item '{menu_item['kic_name']}' is not available", None
+
+            # Prepare item data
+            quantity = item_data.get('quantity', 1)
+            unit_price = Decimal(str(menu_item['kic_price']))
+            is_catering = item_data.get('is_catering', False) or menu_item.get('is_catering', False)
+            catering_size = item_data.get('catering_size')
+
+            # Calculate line total
+            line_total = calculate_line_total(
+                unit_price=unit_price,
+                quantity=quantity,
+                is_catering=is_catering,
+                catering_size=catering_size
+            )
+
+            new_item = {
+                'kic_id': kic_id,
+                'name': menu_item['kic_name'],
+                'unit_price': unit_price,
+                'quantity': quantity,
+                'special_instructions': item_data.get('special_instructions'),
+                'is_catering': is_catering,
+                'catering_size': catering_size,
+                'line_total': line_total
+            }
+
+            # Add item to order
+            order_item_id = self.order_repo.add_order_item(
+                order_id=order_id,
+                item_data=new_item,
+                changed_by_user_id=changed_by_user_id,
+                reason=reason
+            )
+
+            if not order_item_id:
+                return False, "Failed to add item to order", None
+
+            # Return updated order
+            updated_order = self.order_repo.get_order_with_items(order_id)
+            return True, "Item added to order successfully", updated_order
+
+        except ValueError as e:
+            return False, str(e), None
+        except Exception as e:
+            return False, f"Failed to add item to order: {str(e)}", None
+
+    def update_order_metadata(
+        self,
+        order_id: int,
+        updates: Dict,
+        changed_by_user_id: int,
+        reason: str = None
+    ) -> Tuple[bool, str, Optional[Dict]]:
+        """
+        Update order-level fields (discount, tip, notes).
+
+        Args:
+            order_id: Order ID
+            updates: Dictionary with fields to update
+            changed_by_user_id: User making the change
+            reason: Reason for update
+
+        Returns:
+            Tuple of (success, message, updated_order)
+        """
+        try:
+            # Validate order exists and status
+            order = self.order_repo.find_by_id(order_id)
+            if not order:
+                return False, "Order not found", None
+
+            statuses = self.order_repo.get_all_statuses()
+            status_names = {s['status_id']: s['status_name'] for s in statuses}
+            current_status = status_names.get(order['current_status_id'])
+
+            if current_status in ['Completed', 'Cancelled']:
+                return False, f"Cannot edit {current_status.lower()} orders", None
+
+            # Validate discount if being updated
+            if 'discount' in updates:
+                discount = updates['discount']
+                discount_type = discount.get('type')
+                discount_value = Decimal(str(discount.get('value', 0)))
+
+                discount_errors = validate_discount(discount_type, float(discount_value))
+                if discount_errors:
+                    return False, '; '.join(discount_errors), None
+
+                updates['discount_type'] = discount_type
+                updates['discount_amount'] = discount_value
+                del updates['discount']
+
+            # Update order
+            success = self.order_repo.update_order_with_audit(
+                order_id=order_id,
+                updates=updates,
+                changed_by_user_id=changed_by_user_id,
+                reason=reason
+            )
+
+            if not success:
+                return False, "Failed to update order", None
+
+            # Return updated order
+            updated_order = self.order_repo.get_order_with_items(order_id)
+            return True, "Order updated successfully", updated_order
+
+        except ValueError as e:
+            return False, str(e), None
+        except Exception as e:
+            return False, f"Failed to update order: {str(e)}", None
+
+    def bulk_update_order_status(
+        self,
+        order_ids: List[int],
+        status_id: int,
+        changed_by_user_id: int,
+        note: str = None
+    ) -> Tuple[bool, str, Dict]:
+        """
+        Update status for multiple orders (bulk operation).
+
+        Args:
+            order_ids: List of order IDs
+            status_id: New status ID
+            changed_by_user_id: User making the change
+            note: Optional note for status change
+
+        Returns:
+            Tuple of (success, message, results_dict)
+        """
+        try:
+            # Validate status exists
+            statuses = self.order_repo.get_all_statuses()
+            valid_status = any(s['status_id'] == status_id for s in statuses)
+
+            if not valid_status:
+                return False, "Invalid status ID", None
+
+            # Perform bulk update
+            results = self.order_repo.bulk_update_status(
+                order_ids=order_ids,
+                status_id=status_id,
+                changed_by_user_id=changed_by_user_id,
+                note=note
+            )
+
+            success_count = results['success_count']
+            total_count = len(order_ids)
+
+            if success_count == total_count:
+                message = f"Successfully updated {success_count} orders"
+            else:
+                message = f"Updated {success_count} of {total_count} orders. {len(results['failed_ids'])} failed."
+
+            return True, message, results
+
+        except Exception as e:
+            return False, f"Bulk update failed: {str(e)}", None

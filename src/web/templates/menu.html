@@ -92,10 +92,18 @@
 
             <!-- Catering Options (hidden by default) -->
             <div id="catering-options" class="hidden mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Catering Tray Size</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Order Type</label>
                 <div class="space-y-2">
+                    <label id="order-type-regular" class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="catering-size" value="regular" class="mr-3" onchange="updateModalPrice()">
+                        <div class="flex-1">
+                            <div class="font-medium">Regular (Per Plate)</div>
+                            <div class="text-sm text-gray-600">Single serving</div>
+                        </div>
+                        <div class="font-semibold text-orange-600" id="price-regular"></div>
+                    </label>
                     <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="catering-size" value="small" class="mr-3">
+                        <input type="radio" name="catering-size" value="small" class="mr-3" onchange="updateModalPrice()">
                         <div class="flex-1">
                             <div class="font-medium">Small Tray</div>
                             <div class="text-sm text-gray-600">Serves 4-6 people</div>
@@ -103,7 +111,7 @@
                         <div class="font-semibold text-orange-600" id="price-small"></div>
                     </label>
                     <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="catering-size" value="medium" class="mr-3">
+                        <input type="radio" name="catering-size" value="medium" class="mr-3" onchange="updateModalPrice()">
                         <div class="flex-1">
                             <div class="font-medium">Medium Tray</div>
                             <div class="text-sm text-gray-600">Serves 8-10 people</div>
@@ -111,7 +119,7 @@
                         <div class="font-semibold text-orange-600" id="price-medium"></div>
                     </label>
                     <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="catering-size" value="large" class="mr-3">
+                        <input type="radio" name="catering-size" value="large" class="mr-3" onchange="updateModalPrice()">
                         <div class="flex-1">
                             <div class="font-medium">Large Tray</div>
                             <div class="text-sm text-gray-600">Serves 15-20 people</div>
@@ -177,9 +185,7 @@ async function loadMenu() {
             cat_name: item.category_name,
             cat_id: item.category_id,
             // Enhance items with diet type (mock data - should come from backend)
-            diet_type: item.kic_name.toLowerCase().includes('chicken') ||
-                      item.kic_name.toLowerCase().includes('lamb') ||
-                      item.kic_name.toLowerCase().includes('fish') ? 'non-veg' : 'veg'
+            diet_type: (() => { const n = item.kic_name.toLowerCase(); return (n.includes('chicken') || n.includes('mutton') || n.includes('shrimp') || n.includes('egg') || n.includes('fish') || n.includes('lamb')) ? 'non-veg' : 'veg'; })()
         }));
 
         renderCategoryNav();
@@ -207,17 +213,35 @@ function renderCategoryNav() {
         return;
     }
 
-    nav.innerHTML = menuData.categories.map(category => {
-        const catName = category.cat_name || 'Unknown';
-        return `
-            <a href="#section-${catName.replace(/\s+/g, '-')}"
+    const navEntries = [];
+
+    // In party mode, prepend a Catering entry
+    if (isPartyMode) {
+        navEntries.push(`
+            <a href="#section-Catering"
                class="category-nav-btn px-4 py-2 rounded-lg font-medium transition whitespace-nowrap bg-white text-gray-700 hover:bg-gray-100"
-               data-category="${catName}"
-               onclick="scrollToCategory('${catName}'); return false;">
-                ${getCategoryEmoji(catName)} ${catName}
+               data-category="Catering"
+               onclick="scrollToCategory('Catering'); return false;">
+                🍱 Catering
             </a>
-        `;
-    }).join('');
+        `);
+    }
+
+    menuData.categories
+        .filter(cat => cat.cat_name !== 'Catering')
+        .forEach(category => {
+            const catName = category.cat_name || 'Unknown';
+            navEntries.push(`
+                <a href="#section-${catName.replace(/\s+/g, '-')}"
+                   class="category-nav-btn px-4 py-2 rounded-lg font-medium transition whitespace-nowrap bg-white text-gray-700 hover:bg-gray-100"
+                   data-category="${catName}"
+                   onclick="scrollToCategory('${catName}'); return false;">
+                    ${getCategoryEmoji(catName)} ${catName}
+                </a>
+            `);
+        });
+
+    nav.innerHTML = navEntries.join('');
 }
 
 // Render menu sections by category
@@ -234,30 +258,54 @@ function renderMenuSections() {
         return;
     }
 
-    menuData.categories.forEach(category => {
-        const catName = category.cat_name || 'Unknown';
-        const categoryItems = getFilteredItems(catName);
+    // In party mode, show a virtual Catering section first
+    if (isPartyMode) {
+        const cateringItems = getCateringItems();
+        if (cateringItems.length > 0) {
+            hasVisibleItems = true;
+            const section = document.createElement('section');
+            section.id = 'section-Catering';
+            section.className = 'scroll-mt-32';
+            section.innerHTML = `
+                <div class="flex items-center mb-6">
+                    <span class="text-4xl mr-3">🍱</span>
+                    <h2 class="text-2xl font-bold text-gray-900">Catering</h2>
+                    <span class="ml-3 text-sm text-gray-500">(${cateringItems.length} items)</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                    ${cateringItems.map(item => renderMenuItem(item)).join('')}
+                </div>
+            `;
+            container.appendChild(section);
+        }
+    }
 
-        if (categoryItems.length === 0) return;
+    menuData.categories
+        .filter(cat => cat.cat_name !== 'Catering')
+        .forEach(category => {
+            const catName = category.cat_name || 'Unknown';
+            const categoryItems = getFilteredItems(catName);
 
-        hasVisibleItems = true;
+            if (categoryItems.length === 0) return;
 
-        const section = document.createElement('section');
-        section.id = `section-${catName.replace(/\s+/g, '-')}`;
-        section.className = 'scroll-mt-32';
-        section.innerHTML = `
-            <div class="flex items-center mb-6">
-                <span class="text-4xl mr-3">${getCategoryEmoji(catName)}</span>
-                <h2 class="text-2xl font-bold text-gray-900">${catName}</h2>
-                <span class="ml-3 text-sm text-gray-500">(${categoryItems.length} items)</span>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                ${categoryItems.map(item => renderMenuItem(item)).join('')}
-            </div>
-        `;
+            hasVisibleItems = true;
 
-        container.appendChild(section);
-    });
+            const section = document.createElement('section');
+            section.id = `section-${catName.replace(/\s+/g, '-')}`;
+            section.className = 'scroll-mt-32';
+            section.innerHTML = `
+                <div class="flex items-center mb-6">
+                    <span class="text-4xl mr-3">${getCategoryEmoji(catName)}</span>
+                    <h2 class="text-2xl font-bold text-gray-900">${catName}</h2>
+                    <span class="ml-3 text-sm text-gray-500">(${categoryItems.length} items)</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                    ${categoryItems.map(item => renderMenuItem(item)).join('')}
+                </div>
+            `;
+
+            container.appendChild(section);
+        });
 
     if (!hasVisibleItems) {
         container.classList.add('hidden');
@@ -277,13 +325,20 @@ function getFilteredItems(categoryName) {
         items = items.filter(item => item.diet_type === currentDietFilter);
     }
 
-    // Filter by party mode
+    // In party mode, catering items move to the virtual Catering section
     if (isPartyMode) {
-        items = items.filter(item => item.is_catering);
-    } else {
         items = items.filter(item => !item.is_catering);
     }
 
+    return items;
+}
+
+// Get all catering-eligible items (for party mode Catering section)
+function getCateringItems() {
+    let items = menuData.items.filter(item => item.is_catering);
+    if (currentDietFilter !== 'all') {
+        items = items.filter(item => item.diet_type === currentDietFilter);
+    }
     return items;
 }
 
@@ -294,25 +349,23 @@ function renderMenuItem(item) {
         : '<span class="inline-block w-4 h-4 border-2 border-red-600"><span class="block w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] border-b-red-600 m-[3px]"></span></span>';
 
     return `
-        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-            <div class="h-48 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center relative">
-                <span class="text-6xl">${getCategoryEmoji(item.cat_name)}</span>
-                <div class="absolute top-3 left-3 bg-white rounded p-1">
-                    ${dietIcon}
-                </div>
-                ${item.is_catering ? '<div class="absolute top-3 right-3 bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">Party Tray</div>' : ''}
+        <div class="bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition p-3 flex items-center gap-3">
+            <div class="flex-shrink-0 flex flex-col items-center gap-1">
+                <span class="text-2xl">${getCategoryEmoji(item.cat_name)}</span>
+                ${dietIcon}
             </div>
-            <div class="p-5">
-                <div class="flex items-start justify-between mb-2">
-                    <h3 class="font-semibold text-lg text-gray-900">${item.kic_name}</h3>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1 flex-wrap">
+                    <h3 class="font-semibold text-sm text-gray-900 leading-tight">${item.kic_name}</h3>
+                    ${item.is_catering && isPartyMode ? '<span class="text-xs bg-green-100 text-green-700 px-1 rounded">Tray</span>' : ''}
                 </div>
-                <p class="text-gray-600 text-sm mb-3">${item.description || 'Delicious dish made with fresh ingredients'}</p>
-                <div class="flex items-center justify-between">
-                    <span class="text-2xl font-bold text-orange-600">${formatCurrency(item.kic_price)}${item.is_catering ? '+' : ''}</span>
-                    <button onclick='openModal(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium">
-                        Add to Cart
-                    </button>
-                </div>
+                <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">${item.description || 'Fresh ingredients, made with love'}</p>
+            </div>
+            <div class="flex-shrink-0 flex flex-col items-end gap-1">
+                <span class="text-base font-bold text-orange-600">${formatCurrency(item.kic_price)}${item.is_catering ? '+' : ''}</span>
+                <button onclick='openModal(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-xs font-medium">
+                    Add
+                </button>
             </div>
         </div>
     `;
@@ -352,7 +405,9 @@ function filterDietType(type) {
 // Toggle party mode
 function togglePartyMode() {
     isPartyMode = document.getElementById('party-mode-toggle').checked;
+    renderCategoryNav();
     renderMenuSections();
+    setupScrollSpy();
 }
 
 // Scroll to category
@@ -379,6 +434,10 @@ function setupScrollSpy() {
     }, {
         rootMargin: '-120px 0px -70% 0px'
     });
+
+    // Observe virtual Catering section (party mode)
+    const cateringSection = document.getElementById('section-Catering');
+    if (cateringSection) observer.observe(cateringSection);
 
     // Observe all category sections
     if (menuData.categories && menuData.categories.length > 0) {
@@ -415,6 +474,16 @@ function getCategoryEmoji(category) {
     return emojis[category] || '🍽️';
 }
 
+// Update modal price based on selected order type
+function updateModalPrice() {
+    if (!selectedItem) return;
+    const sizeInput = document.querySelector('input[name="catering-size"]:checked');
+    const price = (sizeInput && sizeInput.value !== 'regular')
+        ? getCateringPrice(selectedItem.kic_price, sizeInput.value)
+        : selectedItem.kic_price;
+    document.getElementById('modal-price').textContent = formatCurrency(price);
+}
+
 // Open add to cart modal
 function openModal(item) {
     selectedItem = item;
@@ -426,16 +495,17 @@ function openModal(item) {
     document.getElementById('modal-instructions').value = '';
 
     const cateringOptions = document.getElementById('catering-options');
-    if (item.is_catering) {
+    // Only show tray size options when party mode is on
+    if (item.is_catering && isPartyMode) {
         cateringOptions.classList.remove('hidden');
+        document.getElementById('order-type-regular').classList.add('hidden');
 
-        // Calculate and display catering prices
         document.getElementById('price-small').textContent = formatCurrency(getCateringPrice(item.kic_price, 'small'));
         document.getElementById('price-medium').textContent = formatCurrency(getCateringPrice(item.kic_price, 'medium'));
         document.getElementById('price-large').textContent = formatCurrency(getCateringPrice(item.kic_price, 'large'));
 
-        // Select first option by default
         document.querySelector('input[name="catering-size"][value="small"]').checked = true;
+        updateModalPrice();
     } else {
         cateringOptions.classList.add('hidden');
     }
@@ -473,11 +543,11 @@ function addToCart() {
         special_instructions: instructions
     };
 
-    // Handle catering items
-    if (selectedItem.is_catering) {
+    // Handle catering tray orders (only in party mode)
+    if (selectedItem.is_catering && isPartyMode) {
         const sizeInput = document.querySelector('input[name="catering-size"]:checked');
         if (!sizeInput) {
-            showToast('Please select a catering tray size', 'warning');
+            showToast('Please select a tray size', 'warning');
             return;
         }
 
