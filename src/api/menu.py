@@ -1,11 +1,18 @@
 """Menu API endpoints."""
+import time
 from flask import Blueprint, request
 from src.services.menu_service import MenuService
+from src.repositories.report_repository import ReportRepository
 from src.middleware.auth_middleware import require_auth, require_role
 from src.utils.responses import success_response, error_response
 
 menu_bp = Blueprint('menu', __name__, url_prefix='/api/menu')
 menu_service = MenuService()
+report_repo = ReportRepository()
+
+# In-memory cache: {data, expires_at}
+_popular_cache = {'data': None, 'expires_at': 0}
+POPULAR_CACHE_TTL = 3600  # 1 hour
 
 
 @menu_bp.route('', methods=['GET'])
@@ -33,6 +40,48 @@ def get_menu():
     )
 
     return success_response(menu_data)
+
+
+@menu_bp.route('/popular', methods=['GET'])
+def get_popular_items():
+    """
+    Get top 3 popular items based on orders in the last 7 days.
+    Result is cached for 1 hour to avoid repeated DB queries on page load.
+    """
+    global _popular_cache
+    now = time.time()
+
+    if _popular_cache['data'] is not None and now < _popular_cache['expires_at']:
+        return success_response(_popular_cache['data'])
+
+    from datetime import datetime, timedelta
+    end = datetime.now()
+    start = end - timedelta(days=7)
+    items = report_repo.get_top_selling_items(start_date=start, end_date=end, limit=3)
+
+    # If not enough orders in last week, fall back to top items all-time
+    if len(items) < 3:
+        items = report_repo.get_top_selling_items(limit=3)
+
+    # Enrich with full menu item details (description, is_catering, price)
+    enriched = []
+    for it in items:
+        detail = menu_service.get_item(it['kic_id'])
+        if detail:
+            enriched.append({
+                'kic_id': it['kic_id'],
+                'kic_name': detail.get('kic_name', it['name']),
+                'kic_price': detail.get('kic_price', 0),
+                'description': detail.get('description', ''),
+                'is_catering': detail.get('is_catering', False),
+                'orders_count': it['orders_count'],
+                'quantity_sold': it['quantity_sold'],
+            })
+
+    _popular_cache['data'] = enriched
+    _popular_cache['expires_at'] = now + POPULAR_CACHE_TTL
+
+    return success_response(enriched)
 
 
 @menu_bp.route('/items/<int:kic_id>', methods=['GET'])

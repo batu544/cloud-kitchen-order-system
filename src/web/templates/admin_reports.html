@@ -1,0 +1,673 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Cloud Kitchen{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 class="text-3xl font-bold text-gray-900">Reports</h1>
+        <p class="mt-1 text-gray-600">Analytics and order reporting</p>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 mb-6">
+        <nav class="-mb-px flex gap-6">
+            <button id="tab-sales" onclick="switchTab('sales')"
+                class="tab-btn py-3 px-1 border-b-2 border-orange-600 text-orange-600 font-medium text-sm">
+                Sales Report
+            </button>
+            <button id="tab-orders" onclick="switchTab('orders')"
+                class="tab-btn py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">
+                Orders Report
+            </button>
+            <button id="tab-pending" onclick="switchTab('pending')"
+                class="tab-btn py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">
+                Pending Payments
+                <span id="pending-badge" class="hidden ml-1.5 px-1.5 py-0.5 text-xs font-bold bg-red-100 text-red-600 rounded-full"></span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- SALES TAB                                                           -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="panel-sales">
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex gap-2">
+                    <button onclick="setQuickFilter('today')" class="quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-orange-50 hover:border-orange-400 transition" data-filter="today">Today</button>
+                    <button onclick="setQuickFilter('week')" class="quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-orange-50 hover:border-orange-400 transition" data-filter="week">This Week</button>
+                    <button onclick="setQuickFilter('month')" class="quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-orange-50 hover:border-orange-400 transition bg-orange-600 text-white border-orange-600" data-filter="month">This Month</button>
+                    <button onclick="setQuickFilter('year')" class="quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-orange-50 hover:border-orange-400 transition" data-filter="year">This Year</button>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="text-gray-600">From</span>
+                    <input type="date" id="start-date" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    <span class="text-gray-600">To</span>
+                    <input type="date" id="end-date" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    <button onclick="applyDateRange()" class="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700 transition">Apply</button>
+                </div>
+                <div class="flex items-center gap-2 ml-auto">
+                    <span class="text-sm text-gray-600">Group by:</span>
+                    <div class="flex rounded-lg border border-gray-300 overflow-hidden">
+                        <button onclick="setGroupBy('day')" class="group-btn px-3 py-1.5 text-sm font-medium bg-white hover:bg-gray-50 transition" data-group="day">Day</button>
+                        <button onclick="setGroupBy('month')" class="group-btn px-3 py-1.5 text-sm font-medium bg-orange-600 text-white border-l border-gray-300 transition" data-group="month">Month</button>
+                        <button onclick="setGroupBy('year')" class="group-btn px-3 py-1.5 text-sm font-medium bg-white border-l border-gray-300 hover:bg-gray-50 transition" data-group="year">Year</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-5">
+                <p class="text-sm text-gray-500">Total Orders</p>
+                <p id="card-orders" class="text-3xl font-bold text-gray-900 mt-1">—</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-5">
+                <p class="text-sm text-gray-500">Total Revenue</p>
+                <p id="card-revenue" class="text-3xl font-bold text-orange-600 mt-1">—</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-5">
+                <p class="text-sm text-gray-500">Avg Order Value</p>
+                <p id="card-avg" class="text-3xl font-bold text-gray-900 mt-1">—</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-5">
+                <p class="text-sm text-gray-500">Total Tips</p>
+                <p id="card-tips" class="text-3xl font-bold text-green-600 mt-1">—</p>
+            </div>
+        </div>
+
+        <!-- Sales Chart -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Revenue Over Time</h2>
+            <div id="chart-empty" class="hidden text-center py-12 text-gray-400">No data for selected period</div>
+            <canvas id="sales-chart" height="80"></canvas>
+        </div>
+
+        <!-- Top 10 Selling Items -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Top 10 Selling Items</h2>
+            <div id="items-loading" class="text-center py-8 text-gray-400">Loading...</div>
+            <table id="items-table" class="hidden w-full text-sm">
+                <thead>
+                    <tr class="border-b text-left text-gray-500">
+                        <th class="pb-3 w-8">#</th>
+                        <th class="pb-3">Item</th>
+                        <th class="pb-3 text-right">Qty Sold</th>
+                        <th class="pb-3 text-right">Revenue</th>
+                        <th class="pb-3 text-right">Orders</th>
+                    </tr>
+                </thead>
+                <tbody id="items-tbody"></tbody>
+            </table>
+            <div id="items-empty" class="hidden text-center py-8 text-gray-400">No items sold in this period</div>
+        </div>
+
+    </div><!-- /panel-sales -->
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- ORDERS TAB                                                          -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="panel-orders" class="hidden">
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex gap-2">
+                    <button onclick="setOrdersQuickFilter('today')" class="orders-quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-orange-50 hover:border-orange-400 transition" data-filter="today">Today</button>
+                    <button onclick="setOrdersQuickFilter('week')" class="orders-quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-orange-50 hover:border-orange-400 transition" data-filter="week">This Week</button>
+                    <button onclick="setOrdersQuickFilter('month')" class="orders-quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-orange-50 hover:border-orange-400 transition bg-orange-600 text-white border-orange-600" data-filter="month">This Month</button>
+                    <button onclick="setOrdersQuickFilter('year')" class="orders-quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-orange-50 hover:border-orange-400 transition" data-filter="year">This Year</button>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="text-gray-600">From</span>
+                    <input type="date" id="orders-start-date" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    <span class="text-gray-600">To</span>
+                    <input type="date" id="orders-end-date" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    <button onclick="applyOrdersDateRange()" class="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700 transition">Apply</button>
+                </div>
+                <div id="orders-count-badge" class="ml-auto text-sm text-gray-500"></div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div id="orders-loading" class="text-center py-12 text-gray-400">Loading orders...</div>
+            <div id="orders-table-wrap" class="hidden overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <!-- Column filter row -->
+                        <tr class="border-b">
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterOrders()" id="f-order-id" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterOrders()" id="f-date" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterOrders()" id="f-customer" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterOrders()" id="f-phone" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterOrders()" id="f-items" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterOrders()" id="f-total" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterOrders()" id="f-paid" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                        </tr>
+                        <!-- Column header row -->
+                        <tr class="border-b text-left text-gray-600">
+                            <th class="px-4 py-3 font-semibold">Order ID</th>
+                            <th class="px-4 py-3 font-semibold">Date</th>
+                            <th class="px-4 py-3 font-semibold">Customer</th>
+                            <th class="px-4 py-3 font-semibold">Phone</th>
+                            <th class="px-4 py-3 font-semibold text-right">Items</th>
+                            <th class="px-4 py-3 font-semibold text-right">Total</th>
+                            <th class="px-4 py-3 font-semibold text-right">Paid</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-tbody"></tbody>
+                </table>
+            </div>
+            <div id="orders-empty" class="hidden text-center py-12 text-gray-400">No orders found for this period</div>
+        </div>
+
+    </div><!-- /panel-orders -->
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- PENDING PAYMENTS TAB                                                -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="panel-pending" class="hidden">
+
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div id="pending-loading" class="text-center py-12 text-gray-400">Loading...</div>
+            <div id="pending-table-wrap" class="hidden overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr class="border-b text-left text-gray-600">
+                            <th class="px-4 py-3 font-semibold">Order ID</th>
+                            <th class="px-4 py-3 font-semibold">Date</th>
+                            <th class="px-4 py-3 font-semibold">Customer</th>
+                            <th class="px-4 py-3 font-semibold">Phone</th>
+                            <th class="px-4 py-3 font-semibold">Status</th>
+                            <th class="px-4 py-3 font-semibold text-right">Total</th>
+                            <th class="px-4 py-3 font-semibold text-right">Paid</th>
+                            <th class="px-4 py-3 font-semibold text-right">Balance Due</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-tbody"></tbody>
+                </table>
+            </div>
+            <div id="pending-empty" class="hidden text-center py-12 text-gray-400">No pending payments — all orders are settled!</div>
+        </div>
+
+    </div><!-- /panel-pending -->
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let currentGroupBy = 'month';
+let currentStartDate = null;
+let currentEndDate = null;
+let salesChart = null;
+
+let ordersStartDate = null;
+let ordersEndDate = null;
+let allOrderRows = [];   // full dataset for client-side filtering
+let ordersLoaded = false;
+
+let pendingLoaded = false;
+
+// Auth guard
+const user = api.getCurrentUser();
+if (!user || user.role !== 'admin') {
+    showToast('Access denied. Admins only.', 'error');
+    window.location.href = '/';
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+function switchTab(tab) {
+    const panels = { sales: 'panel-sales', orders: 'panel-orders', pending: 'panel-pending' };
+    const tabs   = { sales: 'tab-sales',   orders: 'tab-orders',   pending: 'tab-pending' };
+
+    Object.keys(panels).forEach(key => {
+        document.getElementById(panels[key]).classList.toggle('hidden', key !== tab);
+        const btn = document.getElementById(tabs[key]);
+        if (key === tab) {
+            btn.className = 'tab-btn py-3 px-1 border-b-2 border-orange-600 text-orange-600 font-medium text-sm';
+        } else {
+            btn.className = 'tab-btn py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm';
+        }
+    });
+
+    if (tab === 'orders' && !ordersLoaded) {
+        setOrdersQuickFilter('month');
+    }
+    if (tab === 'pending' && !pendingLoaded) {
+        loadPendingPayments();
+    }
+}
+
+// ── Sales: Quick filter helpers ────────────────────────────────────────────
+function setQuickFilter(filter) {
+    const today = new Date();
+    let start, end = formatDate(today);
+
+    if (filter === 'today') {
+        start = end;
+        setGroupBy('day', false);
+    } else if (filter === 'week') {
+        const d = new Date(today);
+        d.setDate(d.getDate() - d.getDay());
+        start = formatDate(d);
+        setGroupBy('day', false);
+    } else if (filter === 'month') {
+        start = formatDate(new Date(today.getFullYear(), today.getMonth(), 1));
+        setGroupBy('day', false);
+    } else if (filter === 'year') {
+        start = formatDate(new Date(today.getFullYear(), 0, 1));
+        setGroupBy('month', false);
+    }
+
+    document.getElementById('start-date').value = start;
+    document.getElementById('end-date').value = end;
+    currentStartDate = start;
+    currentEndDate = end;
+
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+        const active = btn.getAttribute('data-filter') === filter;
+        btn.className = `quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
+            active ? 'bg-orange-600 text-white border-orange-600' : 'border-gray-300 hover:bg-orange-50 hover:border-orange-400'
+        }`;
+    });
+
+    loadAll();
+}
+
+function applyDateRange() {
+    currentStartDate = document.getElementById('start-date').value;
+    currentEndDate = document.getElementById('end-date').value;
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.className = 'quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-orange-50 hover:border-orange-400 transition';
+    });
+    loadAll();
+}
+
+function setGroupBy(group, reload = true) {
+    currentGroupBy = group;
+    document.querySelectorAll('.group-btn').forEach(btn => {
+        const active = btn.getAttribute('data-group') === group;
+        btn.className = `group-btn px-3 py-1.5 text-sm font-medium transition border-l border-gray-300 ${
+            active ? 'bg-orange-600 text-white' : 'bg-white hover:bg-gray-50'
+        }`;
+    });
+    const first = document.querySelector('.group-btn');
+    if (first) first.style.borderLeft = 'none';
+    if (reload) loadAll();
+}
+
+function formatDate(d) {
+    return d.toISOString().split('T')[0];
+}
+
+// ── Sales: Data loading ────────────────────────────────────────────────────
+async function loadAll() {
+    await Promise.all([loadSalesReport(), loadTopItems()]);
+}
+
+async function loadSalesReport() {
+    const params = new URLSearchParams({ group_by: currentGroupBy });
+    if (currentStartDate) params.set('start_date', currentStartDate);
+    if (currentEndDate) params.set('end_date', currentEndDate);
+
+    try {
+        const response = await api.request(`/reports/sales?${params}`);
+        const data = response.data;
+        renderSummaryCards(data.summary);
+        renderChart(data.data, currentGroupBy);
+    } catch (error) {
+        handleAPIError(error);
+    }
+}
+
+async function loadTopItems() {
+    const params = new URLSearchParams({ limit: 10 });
+    if (currentStartDate) params.set('start_date', currentStartDate);
+    if (currentEndDate) params.set('end_date', currentEndDate);
+
+    document.getElementById('items-loading').classList.remove('hidden');
+    document.getElementById('items-table').classList.add('hidden');
+    document.getElementById('items-empty').classList.add('hidden');
+
+    try {
+        const response = await api.request(`/reports/top-items?${params}`);
+        renderTopItems(response.data.items);
+    } catch (error) {
+        handleAPIError(error);
+    }
+}
+
+// ── Sales: Render functions ────────────────────────────────────────────────
+function renderSummaryCards(summary) {
+    document.getElementById('card-orders').textContent = summary.total_orders.toLocaleString();
+    document.getElementById('card-revenue').textContent = formatCurrency(summary.total_sales);
+    document.getElementById('card-avg').textContent = formatCurrency(summary.avg_order_value);
+    document.getElementById('card-tips').textContent = formatCurrency(summary.total_tips);
+}
+
+function renderChart(data, groupBy) {
+    const canvas = document.getElementById('sales-chart');
+    const empty = document.getElementById('chart-empty');
+
+    if (!data || data.length === 0) {
+        canvas.classList.add('hidden');
+        empty.classList.remove('hidden');
+        return;
+    }
+    canvas.classList.remove('hidden');
+    empty.classList.add('hidden');
+
+    const labels = data.map(d => {
+        const dt = new Date(d.period);
+        if (groupBy === 'day') return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (groupBy === 'month') return dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        return dt.getFullYear().toString();
+    });
+    const revenues = data.map(d => d.total_sales);
+    const orders = data.map(d => d.orders_count);
+
+    if (salesChart) salesChart.destroy();
+
+    salesChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Revenue ($)',
+                    data: revenues,
+                    backgroundColor: 'rgba(234, 88, 12, 0.7)',
+                    borderColor: 'rgba(234, 88, 12, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Orders',
+                    data: orders,
+                    type: 'line',
+                    borderColor: 'rgba(59, 130, 246, 0.8)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    yAxisID: 'y1',
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.datasetIndex === 0
+                            ? ` Revenue: ${formatCurrency(ctx.raw)}`
+                            : ` Orders: ${ctx.raw}`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    ticks: { callback: v => '$' + v.toLocaleString() }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    grid: { drawOnChartArea: false },
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+}
+
+function renderTopItems(items) {
+    document.getElementById('items-loading').classList.add('hidden');
+
+    if (!items || items.length === 0) {
+        document.getElementById('items-empty').classList.remove('hidden');
+        return;
+    }
+
+    const tbody = document.getElementById('items-tbody');
+    const maxRevenue = Math.max(...items.map(i => i.total_sales));
+
+    tbody.innerHTML = items.map((item, idx) => `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="py-3 text-gray-400 font-mono">${idx + 1}</td>
+            <td class="py-3">
+                <div class="font-medium text-gray-900">${item.name}</div>
+                <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1">
+                    <div class="bg-orange-500 h-1.5 rounded-full" style="width: ${Math.round((item.total_sales / maxRevenue) * 100)}%"></div>
+                </div>
+            </td>
+            <td class="py-3 text-right text-gray-700">${item.quantity_sold.toLocaleString()}</td>
+            <td class="py-3 text-right font-semibold text-gray-900">${formatCurrency(item.total_sales)}</td>
+            <td class="py-3 text-right text-gray-600">${item.orders_count}</td>
+        </tr>
+    `).join('');
+
+    document.getElementById('items-table').classList.remove('hidden');
+}
+
+// ── Orders: Quick filter helpers ───────────────────────────────────────────
+function setOrdersQuickFilter(filter) {
+    const today = new Date();
+    let start, end = formatDate(today);
+
+    if (filter === 'today') {
+        start = end;
+    } else if (filter === 'week') {
+        const d = new Date(today);
+        d.setDate(d.getDate() - d.getDay());
+        start = formatDate(d);
+    } else if (filter === 'month') {
+        start = formatDate(new Date(today.getFullYear(), today.getMonth(), 1));
+    } else if (filter === 'year') {
+        start = formatDate(new Date(today.getFullYear(), 0, 1));
+    }
+
+    document.getElementById('orders-start-date').value = start;
+    document.getElementById('orders-end-date').value = end;
+    ordersStartDate = start;
+    ordersEndDate = end;
+
+    document.querySelectorAll('.orders-quick-btn').forEach(btn => {
+        const active = btn.getAttribute('data-filter') === filter;
+        btn.className = `orders-quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
+            active ? 'bg-orange-600 text-white border-orange-600' : 'border-gray-300 hover:bg-orange-50 hover:border-orange-400'
+        }`;
+    });
+
+    loadOrdersReport();
+}
+
+function applyOrdersDateRange() {
+    ordersStartDate = document.getElementById('orders-start-date').value;
+    ordersEndDate = document.getElementById('orders-end-date').value;
+    document.querySelectorAll('.orders-quick-btn').forEach(btn => {
+        btn.className = 'orders-quick-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-orange-50 hover:border-orange-400 transition';
+    });
+    loadOrdersReport();
+}
+
+// ── Orders: Data loading ───────────────────────────────────────────────────
+async function loadOrdersReport() {
+    const params = new URLSearchParams();
+    if (ordersStartDate) params.set('start_date', ordersStartDate);
+    if (ordersEndDate) params.set('end_date', ordersEndDate);
+
+    document.getElementById('orders-loading').classList.remove('hidden');
+    document.getElementById('orders-table-wrap').classList.add('hidden');
+    document.getElementById('orders-empty').classList.add('hidden');
+    document.getElementById('orders-count-badge').textContent = '';
+
+    try {
+        const response = await api.request(`/reports/orders?${params}`);
+        allOrderRows = response.data.orders || [];
+        ordersLoaded = true;
+        renderOrdersTable(allOrderRows);
+    } catch (error) {
+        handleAPIError(error);
+        document.getElementById('orders-loading').classList.add('hidden');
+    }
+}
+
+// ── Orders: Render & filter ────────────────────────────────────────────────
+function renderOrdersTable(orders) {
+    document.getElementById('orders-loading').classList.add('hidden');
+
+    if (!orders || orders.length === 0) {
+        document.getElementById('orders-empty').classList.remove('hidden');
+        document.getElementById('orders-count-badge').textContent = '';
+        return;
+    }
+
+    const tbody = document.getElementById('orders-tbody');
+    tbody.innerHTML = orders.map(o => {
+        const dt = new Date(o.order_date);
+        const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const unpaid = o.total_amount - o.total_paid;
+        const paidClass = unpaid <= 0 ? 'text-green-600' : 'text-red-500';
+        return `<tr class="border-b hover:bg-gray-50">
+            <td class="px-4 py-3 font-mono text-gray-700">#${o.order_id}</td>
+            <td class="px-4 py-3 text-gray-700 whitespace-nowrap">${dateStr}<br><span class="text-xs text-gray-400">${timeStr}</span></td>
+            <td class="px-4 py-3 text-gray-900">${escapeHtml(o.customer_name)}</td>
+            <td class="px-4 py-3 text-gray-600 font-mono">${escapeHtml(o.phone)}</td>
+            <td class="px-4 py-3 text-right text-gray-700">${o.item_count}</td>
+            <td class="px-4 py-3 text-right font-semibold text-gray-900">${formatCurrency(o.total_amount)}</td>
+            <td class="px-4 py-3 text-right font-semibold ${paidClass}">${formatCurrency(o.total_paid)}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('orders-table-wrap').classList.remove('hidden');
+    document.getElementById('orders-count-badge').textContent = `${orders.length} order${orders.length !== 1 ? 's' : ''}`;
+}
+
+function filterOrders() {
+    const fId       = document.getElementById('f-order-id').value.toLowerCase();
+    const fDate     = document.getElementById('f-date').value.toLowerCase();
+    const fCustomer = document.getElementById('f-customer').value.toLowerCase();
+    const fPhone    = document.getElementById('f-phone').value.toLowerCase();
+    const fItems    = document.getElementById('f-items').value.toLowerCase();
+    const fTotal    = document.getElementById('f-total').value.toLowerCase();
+    const fPaid     = document.getElementById('f-paid').value.toLowerCase();
+
+    const filtered = allOrderRows.filter(o => {
+        const dt = new Date(o.order_date);
+        const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toLowerCase();
+        return (
+            String(o.order_id).includes(fId) &&
+            dateStr.includes(fDate) &&
+            o.customer_name.toLowerCase().includes(fCustomer) &&
+            o.phone.toLowerCase().includes(fPhone) &&
+            String(o.item_count).includes(fItems) &&
+            formatCurrency(o.total_amount).toLowerCase().includes(fTotal) &&
+            formatCurrency(o.total_paid).toLowerCase().includes(fPaid)
+        );
+    });
+
+    renderOrdersTable(filtered);
+}
+
+// ── Pending Payments ───────────────────────────────────────────────────────
+async function loadPendingPayments() {
+    document.getElementById('pending-loading').classList.remove('hidden');
+    document.getElementById('pending-table-wrap').classList.add('hidden');
+    document.getElementById('pending-empty').classList.add('hidden');
+
+    try {
+        const response = await api.request('/reports/pending-payments');
+        const orders = response.data.orders || [];
+        pendingLoaded = true;
+
+        // Update badge
+        const badge = document.getElementById('pending-badge');
+        if (orders.length > 0) {
+            badge.textContent = orders.length;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+
+        renderPendingTable(orders);
+    } catch (error) {
+        handleAPIError(error);
+        document.getElementById('pending-loading').classList.add('hidden');
+    }
+}
+
+function renderPendingTable(orders) {
+    document.getElementById('pending-loading').classList.add('hidden');
+
+    if (!orders || orders.length === 0) {
+        document.getElementById('pending-empty').classList.remove('hidden');
+        return;
+    }
+
+    const tbody = document.getElementById('pending-tbody');
+    tbody.innerHTML = orders.map(o => {
+        const dt = new Date(o.order_date);
+        const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const balance = o.total_amount - o.total_paid;
+        const statusLabel = o.payment_status === 'partially_paid'
+            ? '<span class="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">Partial</span>'
+            : '<span class="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-600 rounded-full">Pending</span>';
+        return `<tr class="border-b hover:bg-orange-50 cursor-pointer" onclick="window.location='/staff/orders/${o.order_id}'">
+            <td class="px-4 py-3 font-mono text-orange-600 hover:underline">#${o.order_id}</td>
+            <td class="px-4 py-3 text-gray-700 whitespace-nowrap">${dateStr}<br><span class="text-xs text-gray-400">${timeStr}</span></td>
+            <td class="px-4 py-3 text-gray-900">${escapeHtml(o.customer_name)}</td>
+            <td class="px-4 py-3 text-gray-600 font-mono">${escapeHtml(o.phone)}</td>
+            <td class="px-4 py-3">${statusLabel}</td>
+            <td class="px-4 py-3 text-right font-semibold text-gray-900">${formatCurrency(o.total_amount)}</td>
+            <td class="px-4 py-3 text-right text-gray-600">${formatCurrency(o.total_paid)}</td>
+            <td class="px-4 py-3 text-right font-bold text-red-600">${formatCurrency(balance)}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('pending-table-wrap').classList.remove('hidden');
+}
+
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    setQuickFilter('month');
+});
+</script>
+{% endblock %}

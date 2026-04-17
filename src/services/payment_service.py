@@ -152,6 +152,20 @@ class PaymentService:
             # Log error but don't fail the payment recording
             print(f"Auto-transition failed for order {order_id}: {str(e)}")
 
+    def refund_all_payments(self, order_id: int, user_id: int = None) -> Tuple[bool, str, Optional[Dict]]:
+        """Mark all non-refunded payment records as refunded and set order payment_status to refunded."""
+        order = self.order_repo.find_by_id(order_id)
+        if not order:
+            return False, "Order not found", None
+
+        payments = self.payment_repo.get_payments_for_order(order_id)
+        for payment in payments:
+            if payment['payment_status'] != 'refunded':
+                self.payment_repo.refund_payment(payment['payment_id'])
+
+        self.order_repo.update_payment_status(order_id, 'refunded')
+        return True, "Full refund issued successfully", None
+
     def get_order_payments(self, order_id: int) -> Tuple[bool, str, Optional[Dict]]:
         """
         Get all payments for an order.
@@ -171,3 +185,46 @@ class PaymentService:
         }
 
         return True, "Payments retrieved", payments_data
+
+    def refund_payment(self, order_id: int, payment_id: int,
+                       refund_reason: str = None,
+                       refunded_by_user_id: int = None) -> Tuple[bool, str, Optional[Dict]]:
+        """Refund a specific payment record and recalculate order payment status."""
+        payments = self.payment_repo.get_payments_for_order(order_id)
+        payment = next((p for p in payments if p['payment_id'] == payment_id), None)
+
+        if not payment:
+            return False, "Payment not found for this order", None
+        if payment['payment_status'] == 'refunded':
+            return False, "Payment is already refunded", None
+
+        success = self.payment_repo.refund_payment(payment_id)
+        if not success:
+            return False, "Failed to refund payment", None
+
+        # Recalculate order payment status
+        total_paid = self.payment_repo.get_total_paid_for_order(order_id)
+        order = self.order_repo.find_by_id(order_id)
+
+        if total_paid <= 0:
+            new_status = 'refunded'
+        elif total_paid < Decimal(str(order['total_amount'])):
+            new_status = 'partially_paid'
+        else:
+            new_status = 'paid'
+
+        self.order_repo.update_payment_status(order_id, new_status)
+        return True, "Payment refunded successfully", {'order_payment_status': new_status}
+
+    def update_order_payment_status(self, order_id: int, payment_status: str) -> Tuple[bool, str]:
+        """Manually set the order-level payment status (staff override)."""
+        valid_statuses = ['pending', 'paid', 'partially_paid', 'refunded']
+        if payment_status not in valid_statuses:
+            return False, f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+
+        order = self.order_repo.find_by_id(order_id)
+        if not order:
+            return False, "Order not found"
+
+        self.order_repo.update_payment_status(order_id, payment_status)
+        return True, f"Payment status updated to {payment_status}"

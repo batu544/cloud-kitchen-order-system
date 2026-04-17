@@ -25,6 +25,14 @@
                     </p>
                 </div>
 
+                <!-- Logged-in User Banner -->
+                <div id="logged-in-banner" class="hidden mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+                    <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <p class="text-sm text-green-800">Logged in as <span id="logged-in-name" class="font-semibold"></span> — contact details pre-filled from your profile.</p>
+                </div>
+
                 <!-- Customer Information -->
                 <div class="mb-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Customer Information</h2>
@@ -185,25 +193,31 @@ async function initCheckout() {
 async function prefillUserInfo() {
     try {
         const response = await api.getUserDetails();
-        const userDetails = response.data;
+        const u = response.data;
 
-        // Prefill name from customer name
-        if (userDetails.cust_name) {
-            document.getElementById('customer-name').value = userDetails.cust_name;
-        }
+        const nameField  = document.getElementById('customer-name');
+        const phoneField = document.getElementById('customer-phone');
+        const emailField = document.getElementById('customer-email');
 
-        // Prefill phone
-        if (userDetails.phone) {
-            document.getElementById('customer-phone').value = userDetails.phone;
-        }
+        if (u.cust_name)          nameField.value  = u.cust_name;
+        if (u.cust_phone_number)  phoneField.value = u.cust_phone_number;
+        if (u.cust_email)         emailField.value = u.cust_email;
+        else if (u.username && u.username.includes('@')) emailField.value = u.username;
 
-        // Prefill email if available
-        if (userDetails.email) {
-            document.getElementById('customer-email').value = userDetails.email;
-        }
+        // Make pre-filled fields read-only with a subtle style
+        [nameField, phoneField, emailField].forEach(el => {
+            if (el.value) {
+                el.readOnly = true;
+                el.classList.add('bg-gray-50', 'text-gray-700');
+            }
+        });
+
+        // Show logged-in banner
+        document.getElementById('logged-in-banner').classList.remove('hidden');
+        document.getElementById('logged-in-name').textContent = u.cust_name || u.username;
+
     } catch (error) {
         console.error('Failed to load user details:', error);
-        // Don't show error to user, just skip prefilling
     }
 }
 

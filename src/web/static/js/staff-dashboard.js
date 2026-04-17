@@ -152,18 +152,18 @@ function renderOrdersTable(orders) {
                         #${order.order_id}
                     </a>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.cust_name || 'Guest'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${escapeHtml(order.cust_name || 'Guest')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatPhone(order.order_phone)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.item_count || 0}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${formatCurrency(order.total_amount)}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
-                        ${order.current_status_name}
+                        ${escapeHtml(order.current_status_name)}
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${paymentClass}">
-                        ${order.payment_status}
+                        ${escapeHtml(order.payment_status)}
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -318,7 +318,6 @@ function getStatusClass(status) {
         'Confirmed': 'bg-blue-100 text-blue-800',
         'Preparing': 'bg-purple-100 text-purple-800',
         'Ready': 'bg-indigo-100 text-indigo-800',
-        'Delivered': 'bg-green-100 text-green-800',
         'Completed': 'bg-green-100 text-green-800',
         'Cancelled': 'bg-red-100 text-red-800'
     };
@@ -337,13 +336,13 @@ function getPaymentClass(paymentStatus) {
     return paymentMap[paymentStatus] || 'bg-gray-100 text-gray-800';
 }
 
-// Next status progression map
+// Next status progression map (matches DB: 1=Pending,2=Confirmed,3=Preparing,4=Ready,5=Completed,6=Cancelled)
 const NEXT_STATUS = {
     1: { id: 2, label: 'Confirm' },
     2: { id: 3, label: 'Prepare' },
     3: { id: 4, label: 'Mark Ready' },
-    4: { id: 5, label: 'Deliver' },
-    5: { id: 6, label: 'Complete' }
+    4: { id: 5, label: 'Complete' },
+    5: { id: 6, label: 'Cancel' }
 };
 
 // Helper: Get next status button HTML

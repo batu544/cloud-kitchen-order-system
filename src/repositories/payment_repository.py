@@ -91,3 +91,12 @@ class PaymentRepository(BaseRepository):
             )
             result = cursor.fetchone()
             return Decimal(result[0]) if result else Decimal('0')
+
+    def refund_payment(self, payment_id: int) -> bool:
+        """Mark a specific payment record as refunded."""
+        with get_db_cursor(commit=True) as cursor:
+            cursor.execute(
+                "UPDATE kitch_payment SET payment_status = 'refunded' WHERE payment_id = %s",
+                (payment_id,)
+            )
+            return cursor.rowcount > 0

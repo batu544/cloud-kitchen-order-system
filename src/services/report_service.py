@@ -107,3 +107,30 @@ class ReportService:
             'limit': limit,
             'customers': top_customers
         }
+
+    def get_orders_report(self, start_date: str = None, end_date: str = None) -> Dict:
+        """Get orders report for a date range."""
+        if not end_date:
+            end_datetime = datetime.now()
+        else:
+            end_datetime = datetime.fromisoformat(end_date)
+
+        if not start_date:
+            start_datetime = end_datetime - timedelta(days=30)
+        else:
+            start_datetime = datetime.fromisoformat(start_date)
+
+        orders = self.report_repo.get_orders_report(start_datetime, end_datetime)
+
+        return {
+            'period': {
+                'start': start_datetime.isoformat(),
+                'end': end_datetime.isoformat()
+            },
+            'orders': orders
+        }
+
+    def get_pending_payments_report(self) -> Dict:
+        """Get all orders with pending or partially paid status."""
+        orders = self.report_repo.get_pending_payments()
+        return {'orders': orders}

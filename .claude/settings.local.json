@@ -6,7 +6,21 @@
       "Bash(psql:*)",
       "Bash(python -m src.database.migrate:*)",
       "Bash(python -m unittest discover -s tests/unit -v)",
-      "Bash(python -m pytest tests/unit/ -v)"
+      "Bash(python -m pytest tests/unit/ -v)",
+      "Bash(grep -n \"me/orders\\\\|order_history\\\\|my_orders\" /Users/prasanta/Documents/Python_Projects/src/api/*.py)",
+      "Bash(find /Users/prasanta/Documents/Python_Projects/src/web/templates -type f -name *.html)",
+      "Bash(grep -r \"{{ user\\\\|{{ data\\\\|innerHTML\\\\|{{{\" /Users/prasanta/Documents/Python_Projects/src/web/templates/*.html)",
+      "Bash(pip show:*)",
+      "Bash(playwright install:*)",
+      "Bash(curl -s http://localhost:5001/api/menu)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); cats=d[''''data''''][''''categories''''][:3]; items=d[''''data''''][''''items''''][:3]; print\\(''''Categories:'''', [c[''''category_name''''] for c in cats]\\); print\\(''''Items:'''', [\\(i[''''kic_name''''],i[''''kic_price'''']\\) for i in items]\\)\")",
+      "Bash(curl -s -X POST http://localhost:5001/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"\"\"username\"\"\"\":\"\"\"\"admin\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"admin123\"\"\"\"}')",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d\\)\")",
+      "Bash(pytest tests/e2e/test_app.py -v)",
+      "Bash(python -c \":*)",
+      "Bash(pkill -f \"python run.py\")",
+      "Bash(curl -s http://localhost:5001/api/admin/users)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''message'''',''''ok''''\\), d.get\\(''''success''''\\)\\)\")"
     ],
     "deny": [],
     "ask": []

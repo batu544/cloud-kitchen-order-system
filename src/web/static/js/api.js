@@ -119,10 +119,32 @@ class APIClient {
     }
 
     // Payment methods
+    async getOrderPayments(orderId) {
+        return this.request(`/payments/orders/${orderId}/payments`);
+    }
+
     async recordPayment(orderId, paymentData) {
         return this.request(`/payments/orders/${orderId}/payments`, {
             method: 'POST',
             body: JSON.stringify(paymentData)
+        });
+    }
+
+    async refundAllPayments(orderId) {
+        return this.request(`/payments/orders/${orderId}/refund-all`, { method: 'POST' });
+    }
+
+    async refundPayment(orderId, paymentId, reason) {
+        return this.request(`/payments/orders/${orderId}/payments/${paymentId}/refund`, {
+            method: 'POST',
+            body: JSON.stringify({ reason: reason || '' })
+        });
+    }
+
+    async updateOrderPaymentStatus(orderId, paymentStatus) {
+        return this.request(`/payments/orders/${orderId}/payment-status`, {
+            method: 'PUT',
+            body: JSON.stringify({ payment_status: paymentStatus })
         });
     }
 
@@ -204,9 +226,8 @@ class APIClient {
                     {status_id: 2, status_name: 'Confirmed'},
                     {status_id: 3, status_name: 'Preparing'},
                     {status_id: 4, status_name: 'Ready'},
-                    {status_id: 5, status_name: 'Delivered'},
-                    {status_id: 6, status_name: 'Completed'},
-                    {status_id: 7, status_name: 'Cancelled'}
+                    {status_id: 5, status_name: 'Completed'},
+                    {status_id: 6, status_name: 'Cancelled'}
                 ]
             };
         });

@@ -91,29 +91,41 @@
 
 {% block scripts %}
 <script>
-// Load popular items
 async function loadPopularItems() {
     try {
-        const response = await api.getMenu();
-        const items = response.data.items.slice(0, 3);
+        const response = await api.request('/menu/popular');
+        const items = response.data;
 
         const container = document.getElementById('popular-items');
+        if (!items || items.length === 0) {
+            container.innerHTML = '<p class="col-span-3 text-center text-gray-500">No popular items yet</p>';
+            return;
+        }
+
         container.innerHTML = items.map(item => `
             <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
                 <div class="h-36 bg-gradient-to-br from-orange-400 to-orange-600"></div>
-                <div class="p-3">
-                    <h3 class="font-semibold text-lg mb-2">${item.kic_name}</h3>
-                    <p class="text-gray-600 text-sm mb-4">${item.description || 'Delicious dish'}</p>
+                <div class="p-4">
+                    <h3 class="font-bold text-lg mb-1">${escapeHtml(item.kic_name)}</h3>
+                    <p class="text-gray-600 text-sm mb-4">${escapeHtml(item.description || 'Delicious dish made fresh')}</p>
                     <div class="flex justify-between items-center">
                         <span class="text-2xl font-bold text-orange-600">${formatCurrency(item.kic_price)}</span>
-                        <a href="/menu" class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition">Order Now</a>
+                        <button onclick="addPopularToCart(${item.kic_id}, ${JSON.stringify(item.kic_name)}, ${item.kic_price})"
+                            class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium">
+                            Order Now
+                        </button>
                     </div>
                 </div>
             </div>
         `).join('');
     } catch (error) {
-        console.error('Error loading items:', error);
+        console.error('Error loading popular items:', error);
     }
+}
+
+function addPopularToCart(kicId, name, price) {
+    cart.addItem({ kic_id: kicId, name, price, quantity: 1 });
+    showToast(`${name} added to cart!`, 'success');
 }
 
 document.addEventListener('DOMContentLoaded', loadPopularItems);

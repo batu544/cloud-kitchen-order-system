@@ -27,7 +27,16 @@ class Config:
     DB_POOL_MAX = int(os.getenv('DB_POOL_MAX', 10))
 
     # JWT Configuration
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', SECRET_KEY)
+    _jwt_secret = os.getenv('JWT_SECRET_KEY')
+    if not _jwt_secret:
+        import warnings
+        warnings.warn(
+            "JWT_SECRET_KEY not set in environment — falling back to SECRET_KEY. "
+            "Set JWT_SECRET_KEY explicitly in production.",
+            stacklevel=2
+        )
+        _jwt_secret = SECRET_KEY
+    JWT_SECRET_KEY = _jwt_secret
     JWT_EXPIRATION_HOURS = int(os.getenv('JWT_EXPIRATION_HOURS', 24))
 
     # Server Configuration

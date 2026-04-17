@@ -165,6 +165,78 @@ class ReportRepository:
                 for row in rows
             ]
 
+    def get_orders_report(self, start_date: datetime, end_date: datetime) -> List[Dict]:
+        """Get orders list with customer and payment details for a date range."""
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    o.order_id,
+                    o.order_date,
+                    COALESCE(c.cust_name, o.order_phone, 'Guest') AS customer_name,
+                    COALESCE(c.cust_phone_number, o.order_phone, '') AS phone,
+                    COUNT(DISTINCT oi.order_item_id) AS item_count,
+                    o.total_amount,
+                    COALESCE(SUM(p.amount), 0) AS total_paid
+                FROM kitch_order o
+                LEFT JOIN kitch_customer c ON o.cust_id = c.cust_id
+                LEFT JOIN kitch_order_item oi ON oi.order_id = o.order_id
+                LEFT JOIN kitch_payment p ON p.order_id = o.order_id
+                WHERE o.order_date BETWEEN %s AND %s
+                GROUP BY o.order_id, o.order_date, customer_name, phone, o.total_amount
+                ORDER BY o.order_date DESC
+                """,
+                (start_date, end_date)
+            )
+            rows = cursor.fetchall()
+            return [
+                {
+                    'order_id': row[0],
+                    'order_date': row[1].isoformat() if row[1] else None,
+                    'customer_name': row[2],
+                    'phone': row[3],
+                    'item_count': row[4] if row[4] else 0,
+                    'total_amount': float(row[5]) if row[5] else 0,
+                    'total_paid': float(row[6]) if row[6] else 0
+                }
+                for row in rows
+            ]
+
+    def get_pending_payments(self) -> List[Dict]:
+        """Get all orders with pending or partially_paid payment status."""
+        with get_db_cursor(commit=False) as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    o.order_id,
+                    o.order_date,
+                    COALESCE(c.cust_name, o.order_phone, 'Guest') AS customer_name,
+                    COALESCE(c.cust_phone_number, o.order_phone, '') AS phone,
+                    o.payment_status,
+                    o.total_amount,
+                    COALESCE(SUM(p.amount), 0) AS total_paid
+                FROM kitch_order o
+                LEFT JOIN kitch_customer c ON o.cust_id = c.cust_id
+                LEFT JOIN kitch_payment p ON p.order_id = o.order_id
+                WHERE o.payment_status IN ('pending', 'partially_paid')
+                GROUP BY o.order_id, o.order_date, customer_name, phone, o.payment_status, o.total_amount
+                ORDER BY o.order_date DESC
+                """
+            )
+            rows = cursor.fetchall()
+            return [
+                {
+                    'order_id': row[0],
+                    'order_date': row[1].isoformat() if row[1] else None,
+                    'customer_name': row[2],
+                    'phone': row[3],
+                    'payment_status': row[4],
+                    'total_amount': float(row[5]) if row[5] else 0,
+                    'total_paid': float(row[6]) if row[6] else 0
+                }
+                for row in rows
+            ]
+
     def get_sales_summary(self, start_date: datetime = None,
                          end_date: datetime = None) -> Dict:
         """

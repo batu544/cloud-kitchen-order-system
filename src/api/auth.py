@@ -3,12 +3,14 @@ from flask import Blueprint, request, g
 from src.services.auth_service import AuthService
 from src.middleware.auth_middleware import require_auth
 from src.utils.responses import success_response, error_response
+from src import limiter
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 auth_service = AuthService()
 
 
 @auth_bp.route('/register', methods=['POST'])
+@limiter.limit("5 per minute")
 def register():
     """
     Register a new user account.
@@ -60,6 +62,7 @@ def register():
 
 
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("10 per minute")
 def login():
     """
     Login and get JWT token.

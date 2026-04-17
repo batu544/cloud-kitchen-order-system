@@ -246,15 +246,36 @@ class OrderRepository(BaseRepository):
         """
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
-                # Update order status
+                # Check if cancelling — need to know current payment status
+                cancelled_status_name = None
                 cursor.execute(
-                    """
-                    UPDATE kitch_order
-                    SET current_status_id = %s, updated_at = CURRENT_TIMESTAMP
-                    WHERE order_id = %s
-                    """,
-                    (status_id, order_id)
+                    "SELECT status_name FROM kitch_status WHERE status_id = %s",
+                    (status_id,)
                 )
+                row = cursor.fetchone()
+                if row:
+                    cancelled_status_name = row[0]
+
+                # Update order status (also set payment_status=refunded when cancelling)
+                if cancelled_status_name == 'Cancelled':
+                    cursor.execute(
+                        """
+                        UPDATE kitch_order
+                        SET current_status_id = %s, payment_status = 'refunded',
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE order_id = %s
+                        """,
+                        (status_id, order_id)
+                    )
+                else:
+                    cursor.execute(
+                        """
+                        UPDATE kitch_order
+                        SET current_status_id = %s, updated_at = CURRENT_TIMESTAMP
+                        WHERE order_id = %s
+                        """,
+                        (status_id, order_id)
+                    )
 
                 # Create history entry
                 cursor.execute(

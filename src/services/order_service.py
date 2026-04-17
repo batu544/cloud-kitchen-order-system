@@ -63,7 +63,7 @@ class OrderService:
         else:
             return False, "Customer not found", None
 
-    def create_order(self, order_request: Dict, placed_by_user_id: int = None) -> Tuple[bool, str, Optional[Dict]]:
+    def create_order(self, order_request: Dict, placed_by_user_id: int = None, placed_by_user_role: str = None) -> Tuple[bool, str, Optional[Dict]]:
         """
         Main order creation logic (SPEC.md lines 54-89).
 
@@ -92,6 +92,14 @@ class OrderService:
         discount = order_request.get('discount')
         tip_amount = Decimal(str(order_request.get('tip_amount', 0)))
         notes = order_request.get('notes')
+
+        # Future-date scheduling — staff/admin only
+        order_date = None
+        if placed_by_user_role in ('staff', 'admin') and order_request.get('order_date'):
+            try:
+                order_date = datetime.fromisoformat(order_request['order_date'])
+            except ValueError:
+                return False, "Invalid order_date format. Use ISO 8601 (e.g. 2025-06-15T14:00)", None
 
         # Validate items
         item_errors = validate_order_items(items_data)
@@ -218,6 +226,9 @@ class OrderService:
             'current_status_id': status_id,
             'notes': notes
         }
+
+        if order_date:
+            order_data['order_date'] = order_date
 
         # Create order with items in transaction
         try:

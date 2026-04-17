@@ -33,6 +33,10 @@ class AuthService:
         if not username or len(username.strip()) < 3:
             return False, "Username must be at least 3 characters", None
 
+        # Validate password strength
+        if not password or len(password) < 8:
+            return False, "Password must be at least 8 characters", None
+
         # Validate optional email if provided
         if email and email.strip():
             is_valid_email, email_error = validate_email(email)
@@ -57,6 +61,10 @@ class AuthService:
         try:
             # Create or get customer
             if existing_customer:
+                # Block if a user account already uses this phone
+                existing_user_for_phone = self.user_repo.find_by_customer_id(existing_customer['cust_id'])
+                if existing_user_for_phone:
+                    return False, "An account already exists with this phone number. Please login instead.", None
                 cust_id = existing_customer['cust_id']
             else:
                 cust_id = self.customer_repo.create_customer(
@@ -102,29 +110,30 @@ class AuthService:
     def login(self, username: str, password: str) -> Tuple[bool, str, Optional[Dict]]:
         """
         Authenticate user and generate JWT token.
-
-        Args:
-            username: Username
-            password: Plain text password
-
-        Returns:
-            Tuple of (success, message, user_data_with_token)
+        Accepts username or 10-digit phone number.
         """
-        # Find user
-        user = self.user_repo.find_by_username(username)
+        # Detect phone login (digits only after stripping formatting)
+        cleaned = username.strip().replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
+        is_phone = cleaned.isdigit() and len(cleaned) in (10, 11)
+
+        if is_phone:
+            phone = cleaned[-10:]  # normalise to last 10 digits
+            users = self.user_repo.find_by_phone(phone)
+            if len(users) > 1:
+                return False, "Multiple accounts found for this phone number. Please use your username to login.", None
+            user = users[0] if users else None
+        else:
+            user = self.user_repo.find_by_username(username)
 
         if not user:
             return False, "Invalid username or password", None
 
-        # Check if user is active
         if not user.get('is_active', False):
             return False, "Account is inactive", None
 
-        # Verify password
         if not verify_password(password, user['password_hash']):
             return False, "Invalid username or password", None
 
-        # Generate JWT token
         token = generate_jwt_token(
             user['user_id'],
             user['username'],

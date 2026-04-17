@@ -5,6 +5,7 @@
 
 let currentOrder = null;
 let menuItems = [];
+let refundingPaymentId = null;
 
 // Initialize page
 async function initOrderDetail() {
@@ -48,8 +49,12 @@ async function loadOrder(orderId) {
     showLoading(true);
 
     try {
-        const response = await api.getOrder(orderId);
-        currentOrder = response.data;
+        const [orderResponse, paymentsResponse] = await Promise.all([
+            api.getOrder(orderId),
+            api.getOrderPayments(orderId)
+        ]);
+        currentOrder = orderResponse.data;
+        currentOrder.payments = paymentsResponse.data?.payments || [];
 
         // Render all order sections
         renderOrderHeader();
@@ -103,8 +108,8 @@ function renderOrderItems() {
         return `
             <div class="flex items-start justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                 <div class="flex-1">
-                    <h4 class="font-medium text-gray-900">${item.name}${cateringText}</h4>
-                    ${item.special_instructions ? `<p class="text-sm text-gray-600 mt-1">${item.special_instructions}</p>` : ''}
+                    <h4 class="font-medium text-gray-900">${escapeHtml(item.name)}${cateringText}</h4>
+                    ${item.special_instructions ? `<p class="text-sm text-gray-600 mt-1">${escapeHtml(item.special_instructions)}</p>` : ''}
                     <div class="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                         <span>Qty: ${item.quantity}</span>
                         <span>Unit: ${formatCurrency(item.unit_price)}</span>
@@ -166,9 +171,8 @@ function renderStatusSection() {
         {id: 2, name: 'Confirmed'},
         {id: 3, name: 'Preparing'},
         {id: 4, name: 'Ready'},
-        {id: 5, name: 'Delivered'},
-        {id: 6, name: 'Completed'},
-        {id: 7, name: 'Cancelled'}
+        {id: 5, name: 'Completed'},
+        {id: 6, name: 'Cancelled'}
     ];
 
     select.innerHTML = '<option value="">Select new status...</option>';
@@ -187,7 +191,36 @@ function renderPaymentSection() {
     const badge = document.getElementById('payment-status-badge');
     const paymentClass = getPaymentClass(currentOrder.payment_status);
     badge.className = `px-3 py-1 rounded-full text-sm font-semibold ${paymentClass}`;
-    badge.textContent = currentOrder.payment_status.replace('_', ' ');
+    badge.textContent = currentOrder.payment_status.replace(/_/g, ' ');
+
+    // Calculate total paid from payment records
+    const payments = currentOrder.payments || [];
+    const totalPaid = payments
+        .filter(p => p.payment_status !== 'refunded')
+        .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+    const orderTotal = parseFloat(currentOrder.total_amount || 0);
+    const balance = orderTotal - totalPaid;
+
+    document.getElementById('pay-order-total').textContent = formatCurrency(orderTotal);
+    document.getElementById('pay-total-paid').textContent = formatCurrency(totalPaid);
+
+    const balanceRow = document.getElementById('pay-balance-row');
+    const balanceLabel = document.getElementById('pay-balance-label');
+    const balanceAmount = document.getElementById('pay-balance-amount');
+
+    if (Math.abs(balance) < 0.01) {
+        balanceRow.classList.add('hidden');
+    } else if (balance > 0) {
+        balanceRow.classList.remove('hidden');
+        balanceLabel.textContent = 'Balance Due';
+        balanceAmount.textContent = formatCurrency(balance);
+        balanceAmount.className = 'text-red-600';
+    } else {
+        balanceRow.classList.remove('hidden');
+        balanceLabel.textContent = 'Overpaid';
+        balanceAmount.textContent = formatCurrency(Math.abs(balance));
+        balanceAmount.className = 'text-orange-600';
+    }
 
     // Render payment history
     renderPaymentHistory();
@@ -198,20 +231,34 @@ function renderPaymentHistory() {
     const container = document.getElementById('payment-history');
 
     if (!currentOrder.payments || currentOrder.payments.length === 0) {
-        container.innerHTML = '<p class="text-sm text-gray-500">No payments recorded.</p>';
+        container.innerHTML = '<p class="text-sm text-gray-500 mt-2">No payments recorded.</p>';
         return;
     }
 
-    container.innerHTML = currentOrder.payments.map(payment => `
-        <div class="text-sm border-t pt-2">
-            <div class="flex justify-between">
-                <span class="font-medium">${formatCurrency(payment.amount_paid)}</span>
-                <span class="text-gray-600">${payment.payment_method}</span>
-            </div>
-            ${payment.tip_amount > 0 ? `<div class="text-gray-600">Tip: ${formatCurrency(payment.tip_amount)}</div>` : ''}
-            <div class="text-gray-500 text-xs">${formatDateTime(payment.payment_date)}</div>
-        </div>
-    `).join('');
+    container.innerHTML = '<div class="border-t mt-2 pt-2"><p class="text-xs font-medium text-gray-500 uppercase mb-2">Payment Records</p></div>' +
+        currentOrder.payments.map(payment => {
+            const isRefunded = payment.payment_status === 'refunded';
+            const statusBadge = isRefunded
+                ? '<span class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">refunded</span>'
+                : `<span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">${payment.payment_status}</span>`;
+
+            return `
+            <div class="text-sm border border-gray-100 rounded-lg p-2 ${isRefunded ? 'opacity-60' : ''}">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="font-semibold ${isRefunded ? 'line-through text-gray-400' : 'text-gray-900'}">${formatCurrency(parseFloat(payment.amount || 0))}</span>
+                        <span class="text-gray-500 ml-1">${payment.payment_method}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        ${statusBadge}
+                        ${!isRefunded ? `<button onclick="showRefundModal(${payment.payment_id})" class="text-xs text-red-600 hover:text-red-700 ml-1 underline">Refund</button>` : ''}
+                    </div>
+                </div>
+                ${payment.tip_amount > 0 ? `<div class="text-gray-500 text-xs mt-0.5">Tip: ${formatCurrency(parseFloat(payment.tip_amount))}</div>` : ''}
+                ${payment.payment_notes ? `<div class="text-gray-500 text-xs mt-0.5 italic">${payment.payment_notes}</div>` : ''}
+                <div class="text-gray-400 text-xs mt-0.5">${formatDateTime(payment.payment_date)}</div>
+            </div>`;
+        }).join('');
 }
 
 // Load edit history
@@ -236,11 +283,11 @@ async function loadEditHistory() {
                         ${icon}
                     </div>
                     <div class="flex-1">
-                        <p class="text-sm font-medium text-gray-900">${entry.action_type}</p>
-                        ${entry.change_description ? `<p class="text-sm text-gray-600 mt-1">${entry.change_description}</p>` : ''}
-                        ${entry.note ? `<p class="text-sm text-gray-500 italic mt-1">"${entry.note}"</p>` : ''}
+                        <p class="text-sm font-medium text-gray-900">${escapeHtml(entry.action_type)}</p>
+                        ${entry.change_description ? `<p class="text-sm text-gray-600 mt-1">${escapeHtml(entry.change_description)}</p>` : ''}
+                        ${entry.note ? `<p class="text-sm text-gray-500 italic mt-1">"${escapeHtml(entry.note)}"</p>` : ''}
                         <p class="text-xs text-gray-500 mt-1">
-                            ${formatDateTime(entry.changed_at)} by ${entry.changed_by_username || 'System'}
+                            ${formatDateTime(entry.changed_at)} by ${escapeHtml(entry.changed_by_username || 'System')}
                         </p>
                     </div>
                 </div>
@@ -304,7 +351,7 @@ async function showAddItemModal() {
     container.innerHTML = menuItems.map(item => `
         <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
             <div class="flex-1">
-                <h5 class="font-medium text-gray-900">${item.kic_name}</h5>
+                <h5 class="font-medium text-gray-900">${escapeHtml(item.kic_name)}</h5>
                 <p class="text-sm text-gray-600">${formatCurrency(item.kic_price)}</p>
             </div>
             <button onclick="addItemToOrder(${item.kic_id})" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">
@@ -397,7 +444,9 @@ function showPaymentModal() {
     document.getElementById('payment-modal').classList.remove('hidden');
 
     // Pre-fill amount with remaining balance
-    const totalPaid = currentOrder.payments?.reduce((sum, p) => sum + p.amount_paid, 0) || 0;
+    const totalPaid = (currentOrder.payments || [])
+        .filter(p => p.payment_status !== 'refunded')
+        .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
     const remaining = currentOrder.total_amount - totalPaid;
     document.getElementById('payment-amount').value = remaining.toFixed(2);
 }
@@ -407,6 +456,53 @@ function closePaymentModal() {
     document.getElementById('payment-modal').classList.add('hidden');
     document.getElementById('payment-form').reset();
     document.getElementById('override-fields').classList.add('hidden');
+}
+
+// Show refund modal for a specific payment
+function showRefundModal(paymentId) {
+    refundingPaymentId = paymentId;
+    document.getElementById('refund-reason').value = '';
+    document.getElementById('refund-modal').classList.remove('hidden');
+}
+
+function closeRefundModal() {
+    refundingPaymentId = null;
+    document.getElementById('refund-modal').classList.add('hidden');
+}
+
+async function confirmRefund() {
+    if (!refundingPaymentId) return;
+    const reason = document.getElementById('refund-reason').value.trim();
+
+    try {
+        await api.refundPayment(currentOrder.order_id, refundingPaymentId, reason);
+        showToast('Payment refunded successfully', 'success');
+        closeRefundModal();
+        await loadOrder(currentOrder.order_id);
+    } catch (error) {
+        handleAPIError(error);
+    }
+}
+
+// Show full refund / reverse payment status modal
+function showFullRefundModal() {
+    document.getElementById('reverse-status-select').value = 'refunded';
+    document.getElementById('full-refund-modal').classList.remove('hidden');
+}
+
+function closeFullRefundModal() {
+    document.getElementById('full-refund-modal').classList.add('hidden');
+}
+
+async function confirmFullRefund() {
+    try {
+        await api.refundAllPayments(currentOrder.order_id);
+        showToast('Full refund issued successfully', 'success');
+        closeFullRefundModal();
+        await loadOrder(currentOrder.order_id);
+    } catch (error) {
+        handleAPIError(error);
+    }
 }
 
 // Setup event listeners

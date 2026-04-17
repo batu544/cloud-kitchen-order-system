@@ -92,10 +92,10 @@ function renderCart() {
                     <div class="flex-1">
                         <div class="flex items-start justify-between mb-2">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900">${item.name}</h3>
+                                <h3 class="text-lg font-semibold text-gray-900">${escapeHtml(item.name)}</h3>
                                 ${item.is_catering ? `
                                     <span class="inline-block mt-1 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                        Catering - ${item.catering_size.charAt(0).toUpperCase() + item.catering_size.slice(1)} Tray
+                                        Catering - ${escapeHtml(item.catering_size.charAt(0).toUpperCase() + item.catering_size.slice(1))} Tray
                                     </span>
                                 ` : ''}
                             </div>
@@ -108,7 +108,7 @@ function renderCart() {
 
                         ${item.special_instructions ? `
                             <div class="mt-2 mb-3">
-                                <p class="text-sm text-gray-600"><span class="font-medium">Special instructions:</span> ${item.special_instructions}</p>
+                                <p class="text-sm text-gray-600"><span class="font-medium">Special instructions:</span> ${escapeHtml(item.special_instructions)}</p>
                                 <button onclick="editInstructions(${index})" class="text-xs text-orange-600 hover:text-orange-700 mt-1">Edit</button>
                             </div>
                         ` : `

@@ -2,16 +2,21 @@
 import logging
 import datetime
 from decimal import Decimal
-from flask import Flask
+from flask import Flask, request
 from flask.json.provider import DefaultJSONProvider
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from config import Config
+
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
 from src.middleware.error_handler import register_error_handlers
 from src.api.auth import auth_bp
 from src.api.menu import menu_bp
 from src.api.orders import orders_bp
 from src.api.payments import payments_bp
 from src.api.reports import reports_bp
+from src.api.admin import admin_bp
 from src.api.web_routes import web_bp
 
 
@@ -56,7 +61,7 @@ def create_app(config_class=Config):
 
     logger.info(f"Starting Cloud Kitchen Order System in {config_class.ENV} mode")
 
-    # Initialize CORS for API access
+    # Initialize CORS for API access (wildcard kept — local Wi-Fi deployment)
     CORS(app, resources={
         r"/api/*": {
             "origins": "*",
@@ -64,6 +69,25 @@ def create_app(config_class=Config):
             "allow_headers": ["Content-Type", "Authorization"]
         }
     })
+
+    # Initialize rate limiter
+    limiter.init_app(app)
+
+    # Security headers on every response
+    @app.after_request
+    def set_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' cdn.tailwindcss.com cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' cdn.tailwindcss.com cdn.jsdelivr.net; "
+            "img-src 'self' data:; "
+            "font-src 'self' cdn.tailwindcss.com cdn.jsdelivr.net"
+        )
+        return response
 
     # Register error handlers
     register_error_handlers(app)
@@ -74,6 +98,7 @@ def create_app(config_class=Config):
     app.register_blueprint(orders_bp)
     app.register_blueprint(payments_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(admin_bp)
 
     # Register web UI blueprint
     app.register_blueprint(web_bp)
@@ -89,5 +114,12 @@ def create_app(config_class=Config):
             'service': 'Cloud Kitchen Order System',
             'version': '1.0.0'
         }
+
+    # Debug-only: reset rate limiter storage (for E2E test isolation)
+    if app.config.get('DEBUG'):
+        @app.route('/debug/reset-limits', methods=['POST'])
+        def reset_limits():
+            limiter.reset()
+            return {'status': 'ok'}
 
     return app

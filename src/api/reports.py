@@ -105,3 +105,28 @@ def get_top_customers():
     )
 
     return success_response(report)
+
+
+@reports_bp.route('/orders', methods=['GET'])
+@require_auth
+@require_role('admin')
+def get_orders_report():
+    """Get orders list report (admin only)."""
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    report = report_service.get_orders_report(
+        start_date=start_date,
+        end_date=end_date
+    )
+
+    return success_response(report)
+
+
+@reports_bp.route('/pending-payments', methods=['GET'])
+@require_auth
+@require_role('admin')
+def get_pending_payments():
+    """Get all orders with pending/partially_paid status (admin only)."""
+    report = report_service.get_pending_payments_report()
+    return success_response(report)

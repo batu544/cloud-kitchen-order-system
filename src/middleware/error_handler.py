@@ -2,6 +2,7 @@
 import logging
 from flask import Flask
 from psycopg2 import IntegrityError, OperationalError
+from flask_limiter.errors import RateLimitExceeded
 from src.utils.responses import error_response
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,12 @@ def register_error_handlers(app: Flask):
     def method_not_allowed(e):
         """Handle 405 Method Not Allowed errors."""
         return error_response("Method not allowed", 405)
+
+    @app.errorhandler(429)
+    @app.errorhandler(RateLimitExceeded)
+    def rate_limit_exceeded(e):
+        """Handle 429 Too Many Requests errors."""
+        return error_response("Too many requests. Please try again later.", 429)
 
     @app.errorhandler(IntegrityError)
     def handle_integrity_error(e):

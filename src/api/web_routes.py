@@ -46,10 +46,28 @@ def staff_dashboard():
     return render_template('staff_dashboard.html')
 
 
+@web_bp.route('/staff/orders/new')
+def staff_new_order():
+    """Staff new order creation page."""
+    return render_template('staff_new_order.html')
+
+
 @web_bp.route('/staff/orders/<int:order_id>')
 def staff_order_detail(order_id):
     """Staff order detail and edit page."""
     return render_template('staff_order_detail.html')
+
+
+@web_bp.route('/staff/reports')
+def admin_reports():
+    """Admin reports page."""
+    return render_template('admin_reports.html')
+
+
+@web_bp.route('/my-orders')
+def my_orders():
+    """Customer order history page."""
+    return render_template('my_orders.html')
 
 
 @web_bp.route('/login')
@@ -62,3 +80,9 @@ def login():
 def register():
     """Registration page."""
     return render_template('register.html')
+
+
+@web_bp.route('/admin/users')
+def admin_users():
+    """Admin user management page."""
+    return render_template('admin_users.html')

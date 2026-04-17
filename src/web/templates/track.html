@@ -55,17 +55,11 @@
                         </div>
                         <span class="text-xs text-gray-600 text-center">Ready</span>
                     </div>
-                    <div class="flex flex-col items-center status-step" data-status="Out for Delivery">
+                    <div class="flex flex-col items-center status-step" data-status="Completed">
                         <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mb-2 transition-all">
                             <span class="text-gray-600 text-xs font-bold">5</span>
                         </div>
-                        <span class="text-xs text-gray-600 text-center">Out for<br>Delivery</span>
-                    </div>
-                    <div class="flex flex-col items-center status-step" data-status="Delivered">
-                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mb-2 transition-all">
-                            <span class="text-gray-600 text-xs font-bold">6</span>
-                        </div>
-                        <span class="text-xs text-gray-600 text-center">Delivered</span>
+                        <span class="text-xs text-gray-600 text-center">Completed</span>
                     </div>
                 </div>
             </div>
@@ -209,7 +203,7 @@ function displayOrder(order) {
 
     // Order header
     document.getElementById('order-ref').textContent = `Order #${order.order_id}`;
-    document.getElementById('order-date').textContent = `Placed on ${new Date(order.created_at).toLocaleString()}`;
+    document.getElementById('order-date').textContent = `Placed on ${new Date(order.order_date).toLocaleString()}`;
 
     // Status badge
     const statusBadge = document.getElementById('order-status-badge');
@@ -217,10 +211,11 @@ function displayOrder(order) {
     statusBadge.textContent = statusInfo.text;
     statusBadge.className = `inline-block px-4 py-2 rounded-full text-sm font-semibold ${statusInfo.class}`;
 
-    // Customer info
+    // Customer info — mask PII
     document.getElementById('customer-name').textContent = order.cust_name || 'N/A';
-    document.getElementById('customer-phone').textContent = formatPhone(order.order_phone);
-    document.getElementById('customer-address').textContent = 'Address on file';
+    const ph = (order.order_phone || '').replace(/\D/g, '');
+    document.getElementById('customer-phone').textContent = ph.length >= 4 ? '***-***-' + ph.slice(-4) : '****';
+    document.getElementById('customer-address').textContent = '*** (hidden for privacy)';
 
     // Update status progress bar
     updateStatusProgressBar(order.current_status_name);
@@ -242,8 +237,7 @@ function getStatusInfo(status) {
         'Confirmed': { text: 'Confirmed', class: 'bg-blue-100 text-blue-800' },
         'Preparing': { text: 'Preparing', class: 'bg-purple-100 text-purple-800' },
         'Ready': { text: 'Ready for Pickup', class: 'bg-indigo-100 text-indigo-800' },
-        'Out for Delivery': { text: 'Out for Delivery', class: 'bg-orange-100 text-orange-800' },
-        'Delivered': { text: 'Delivered', class: 'bg-green-100 text-green-800' },
+        'Completed': { text: 'Completed', class: 'bg-green-100 text-green-800' },
         'Cancelled': { text: 'Cancelled', class: 'bg-red-100 text-red-800' }
     };
     return statusMap[status] || { text: status, class: 'bg-gray-100 text-gray-800' };
@@ -258,7 +252,7 @@ function updateStatusProgressBar(currentStatus) {
     progressBar.classList.remove('hidden');
 
     // Define status order (excluding Cancelled as it's a special case)
-    const statusOrder = ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Out for Delivery', 'Delivered'];
+    const statusOrder = ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Completed'];
     const currentIndex = statusOrder.indexOf(currentStatus);
 
     // If status is cancelled or not found, handle separately
@@ -307,7 +301,7 @@ function renderStatusTimeline(history) {
     }
 
     container.innerHTML = history.map((item, index) => {
-        const isLatest = index === history.length - 1;
+        const isLatest = index === 0;
         const statusInfo = getStatusInfo(item.status_name);
 
         return `
@@ -320,10 +314,10 @@ function renderStatusTimeline(history) {
                 </div>
                 <div class="flex-1 pb-8">
                     <div class="flex items-center justify-between mb-1">
-                        <span class="font-semibold text-gray-900">${item.status_name}</span>
+                        <span class="font-semibold text-gray-900">${escapeHtml(item.status_name)}</span>
                         <span class="text-sm text-gray-600">${new Date(item.changed_at).toLocaleString()}</span>
                     </div>
-                    ${item.note ? `<p class="text-sm text-gray-600">${item.note}</p>` : ''}
+                    ${item.note ? `<p class="text-sm text-gray-600">${escapeHtml(item.note)}</p>` : ''}
                 </div>
             </div>
         `;
@@ -337,15 +331,15 @@ function renderOrderItems(items) {
     container.innerHTML = items.map(item => `
         <div class="flex justify-between items-start py-3 border-b last:border-b-0">
             <div class="flex-1">
-                <div class="font-medium text-gray-900">${item.name}</div>
+                <div class="font-medium text-gray-900">${escapeHtml(item.name)}</div>
                 ${item.is_catering && item.catering_size ? `
                     <span class="inline-block mt-1 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                        Catering - ${item.catering_size.charAt(0).toUpperCase() + item.catering_size.slice(1)}
+                        Catering - ${escapeHtml(item.catering_size.charAt(0).toUpperCase() + item.catering_size.slice(1))}
                     </span>
                 ` : ''}
                 <div class="text-sm text-gray-600 mt-1">Quantity: ${item.quantity}</div>
                 ${item.special_instructions ? `
-                    <div class="text-sm text-gray-600 mt-1 italic">Note: ${item.special_instructions}</div>
+                    <div class="text-sm text-gray-600 mt-1 italic">Note: ${escapeHtml(item.special_instructions)}</div>
                 ` : ''}
             </div>
             <div class="text-right">

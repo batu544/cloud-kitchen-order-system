@@ -2,6 +2,26 @@
  * Utility functions
  */
 
+// Escape HTML to prevent XSS when rendering user-supplied data via innerHTML
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// Safe redirect — only allows relative paths to prevent open redirect attacks
+function safeRedirect(url, fallback = '/') {
+    if (url && url.startsWith('/') && !url.startsWith('//')) {
+        window.location.href = url;
+    } else {
+        window.location.href = fallback;
+    }
+}
+
 // Format currency
 function formatCurrency(amount) {
     return new Intl.NumberFormat('en-US', {

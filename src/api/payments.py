@@ -98,3 +98,77 @@ def get_order_payments(order_id):
         return success_response(payments_data, message)
     else:
         return error_response(message, 404)
+
+
+@payments_bp.route('/orders/<int:order_id>/refund-all', methods=['POST'])
+@require_auth
+@require_role('staff', 'admin')
+def refund_all_payments(order_id):
+    """Refund all payment records for an order and mark order payment_status as refunded."""
+    user_id = g.current_user.get('user_id')
+    success, message, _ = payment_service.refund_all_payments(order_id, user_id)
+    if success:
+        return success_response(None, message)
+    else:
+        return error_response(message, 400)
+
+
+@payments_bp.route('/orders/<int:order_id>/payments/<int:payment_id>/refund', methods=['POST'])
+@require_auth
+@require_role('staff', 'admin')
+def refund_payment(order_id, payment_id):
+    """
+    Refund a specific payment record (staff only).
+
+    Request body:
+        { "reason": "optional reason" }
+
+    Returns:
+        200: Payment refunded, order payment status recalculated
+        400: Validation error (already refunded, not found)
+    """
+    data = request.get_json() or {}
+    refund_reason = data.get('reason')
+    refunded_by_user_id = g.current_user.get('user_id')
+
+    success, message, result = payment_service.refund_payment(
+        order_id=order_id,
+        payment_id=payment_id,
+        refund_reason=refund_reason,
+        refunded_by_user_id=refunded_by_user_id
+    )
+
+    if success:
+        return success_response(result, message)
+    else:
+        return error_response(message, 400)
+
+
+@payments_bp.route('/orders/<int:order_id>/payment-status', methods=['PUT'])
+@require_auth
+@require_role('staff', 'admin')
+def update_order_payment_status(order_id):
+    """
+    Manually override the order-level payment status (staff only).
+
+    Request body:
+        { "payment_status": "refunded" }  // pending, paid, partially_paid, refunded
+
+    Returns:
+        200: Status updated
+        400: Validation error
+    """
+    data = request.get_json()
+    if not data:
+        return error_response("Request body is required", 400)
+
+    payment_status = data.get('payment_status')
+    if not payment_status:
+        return error_response("payment_status is required", 400)
+
+    success, message = payment_service.update_order_payment_status(order_id, payment_status)
+
+    if success:
+        return success_response(None, message)
+    else:
+        return error_response(message, 400)

@@ -124,13 +124,33 @@
 
             <!-- Payment Card -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Payment</h2>
-                <div class="mb-4">
+                <h2 class="text-lg font-semibold text-gray-900 mb-3">Payment</h2>
+                <div class="mb-3 flex items-center justify-between">
                     <span id="payment-status-badge" class="px-3 py-1 rounded-full text-sm font-semibold"></span>
                 </div>
-                <button onclick="showPaymentModal()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
-                    Record Payment
-                </button>
+                <!-- Payment amounts -->
+                <div id="payment-amounts" class="mb-4 text-sm space-y-1 border rounded-lg p-3 bg-gray-50">
+                    <div class="flex justify-between text-gray-600">
+                        <span>Order Total</span>
+                        <span id="pay-order-total" class="font-medium text-gray-900"></span>
+                    </div>
+                    <div class="flex justify-between text-gray-600">
+                        <span>Total Paid</span>
+                        <span id="pay-total-paid" class="font-medium text-green-700"></span>
+                    </div>
+                    <div id="pay-balance-row" class="flex justify-between border-t pt-1 font-semibold">
+                        <span id="pay-balance-label"></span>
+                        <span id="pay-balance-amount"></span>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <button onclick="showPaymentModal()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm">
+                        Record Payment
+                    </button>
+                    <button onclick="showFullRefundModal()" id="full-refund-btn" class="w-full px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-medium text-sm">
+                        Issue Full Refund
+                    </button>
+                </div>
                 <div id="payment-history" class="mt-4 space-y-2">
                     <!-- Payment history will be rendered here -->
                 </div>
@@ -199,6 +219,34 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Refund Payment Modal -->
+<div id="refund-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg max-w-sm w-full mx-4 p-6">
+        <h3 class="text-lg font-semibold mb-4">Refund Payment</h3>
+        <p class="text-sm text-gray-600 mb-3">This will mark the selected payment as refunded and recalculate the order payment status.</p>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
+            <textarea id="refund-reason" rows="2" placeholder="Reason for refund..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500"></textarea>
+        </div>
+        <div class="flex space-x-3">
+            <button onclick="confirmRefund()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">Confirm Refund</button>
+            <button onclick="closeRefundModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Full Refund Modal -->
+<div id="full-refund-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg max-w-sm w-full mx-4 p-6">
+        <h3 class="text-lg font-semibold mb-2 text-red-700">Issue Full Refund</h3>
+        <p class="text-sm text-gray-600 mb-4">This will mark <strong>all payment records</strong> as refunded and set the order payment status to <strong>Refunded</strong>. This action cannot be undone.</p>
+        <div class="flex space-x-3">
+            <button onclick="confirmFullRefund()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">Confirm Full Refund</button>
+            <button onclick="closeFullRefundModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm">Cancel</button>
         </div>
     </div>
 </div>

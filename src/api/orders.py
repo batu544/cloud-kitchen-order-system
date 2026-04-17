@@ -52,15 +52,18 @@ def create_order():
     if not data:
         return error_response("Request body is required", 400)
 
-    # Get user ID if authenticated
+    # Get user context if authenticated
     placed_by_user_id = None
+    placed_by_user_role = None
     if hasattr(g, 'current_user'):
         placed_by_user_id = g.current_user.get('user_id')
+        placed_by_user_role = g.current_user.get('role')
 
     # Create order
     success, message, order_data = order_service.create_order(
         order_request=data,
-        placed_by_user_id=placed_by_user_id
+        placed_by_user_id=placed_by_user_id,
+        placed_by_user_role=placed_by_user_role
     )
 
     if success:

@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+{% block title %}New Order - Cloud Kitchen{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex items-center gap-4">
+            <a href="/staff/dashboard" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Create New Order</h1>
+                <p class="mt-1 text-sm text-gray-500">Staff / Admin — schedule for today or a future date</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- ── Left column: customer + items ── -->
+    <div class="lg:col-span-2 space-y-6">
+
+        <!-- Customer Lookup -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Customer</h2>
+            <div class="flex gap-3">
+                <input id="lookup-phone" type="tel" placeholder="Enter 10-digit phone number"
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm">
+                <button onclick="lookupCustomer()"
+                    class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium">
+                    Lookup
+                </button>
+            </div>
+
+            <div id="customer-found" class="hidden mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+                <p class="font-medium text-green-800" id="found-name"></p>
+                <p class="text-green-600" id="found-phone"></p>
+            </div>
+
+            <div id="customer-new" class="hidden mt-4 space-y-3">
+                <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    No customer found. Enter details to create a guest record.
+                </p>
+                <input id="new-name" type="text" placeholder="Customer name *"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 text-sm">
+                <input id="new-email" type="email" placeholder="Email (optional)"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 text-sm">
+            </div>
+
+            <input type="hidden" id="selected-cust-id">
+            <input type="hidden" id="selected-phone">
+        </div>
+
+        <!-- Order Date/Time -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Date &amp; Time</h2>
+            <div class="flex items-center gap-4">
+                <input id="order-date" type="datetime-local"
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 text-sm">
+                <button onclick="setToday()"
+                    class="px-3 py-2 text-xs bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
+                    Now
+                </button>
+            </div>
+            <p class="mt-2 text-xs text-gray-400">Leave blank to use the current time. Set a future date to schedule an advance order.</p>
+        </div>
+
+        <!-- Menu Items -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Menu Items</h2>
+
+            <!-- Search -->
+            <div class="flex gap-3 mb-4">
+                <input id="item-search" type="text" placeholder="Search menu items..."
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 text-sm"
+                    oninput="filterMenu()">
+                <select id="category-filter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="filterMenu()">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+
+            <!-- Menu list -->
+            <div id="menu-list" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                <p class="text-sm text-gray-400 text-center py-4">Loading menu…</p>
+            </div>
+        </div>
+
+        <!-- Added Items -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Items
+                <span id="item-count-badge" class="ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full hidden"></span>
+            </h2>
+            <div id="order-items-list" class="space-y-3">
+                <p id="no-items-msg" class="text-sm text-gray-400 text-center py-4">No items added yet</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Right column: summary + extras ── -->
+    <div class="space-y-6">
+
+        <!-- Order Summary -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 sticky top-4">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Summary</h2>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between text-gray-600">
+                    <span>Subtotal</span>
+                    <span id="sum-subtotal" class="font-medium">$0.00</span>
+                </div>
+                <div id="sum-discount-row" class="hidden flex justify-between text-green-600">
+                    <span>Discount</span>
+                    <span id="sum-discount">-$0.00</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
+                    <span>Tip</span>
+                    <span id="sum-tip">$0.00</span>
+                </div>
+                <div class="border-t pt-2 flex justify-between text-base font-bold text-gray-900">
+                    <span>Total</span>
+                    <span id="sum-total">$0.00</span>
+                </div>
+            </div>
+
+            <!-- Discount -->
+            <div class="mt-4 pt-4 border-t">
+                <p class="text-xs font-medium text-gray-500 uppercase mb-2">Discount</p>
+                <div class="flex gap-2">
+                    <select id="discount-type" class="px-2 py-1.5 border border-gray-300 rounded text-sm" onchange="recalculate()">
+                        <option value="">None</option>
+                        <option value="percent">%</option>
+                        <option value="fixed">$</option>
+                    </select>
+                    <input id="discount-value" type="number" min="0" step="0.01" placeholder="0"
+                        class="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm" oninput="recalculate()">
+                </div>
+            </div>
+
+            <!-- Tip -->
+            <div class="mt-3">
+                <p class="text-xs font-medium text-gray-500 uppercase mb-2">Tip</p>
+                <input id="tip-amount" type="number" min="0" step="0.01" placeholder="0.00"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm" oninput="recalculate()">
+            </div>
+
+            <!-- Notes -->
+            <div class="mt-3">
+                <p class="text-xs font-medium text-gray-500 uppercase mb-2">Notes</p>
+                <textarea id="order-notes" rows="2" placeholder="Special instructions for the kitchen..."
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm resize-none"></textarea>
+            </div>
+
+            <button onclick="submitOrder()"
+                class="mt-5 w-full px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold transition">
+                Place Order
+            </button>
+            <div id="submit-error" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Special instructions modal -->
+<div id="instr-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4">
+        <h3 class="text-base font-semibold text-gray-900 mb-3">Special Instructions</h3>
+        <p class="text-sm text-gray-600 mb-3" id="instr-item-name"></p>
+        <textarea id="instr-text" rows="3" placeholder="E.g. Extra spicy, no onions..."
+            class="w-full px-3 py-2 border border-gray-300 rounded text-sm resize-none"></textarea>
+        <div class="flex gap-3 mt-4">
+            <button onclick="saveInstructions()" class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium">Save</button>
+            <button onclick="closeInstrModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm font-medium">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── State ──
+let allMenuItems = [];
+let orderItems = [];   // [{kic_id, name, price, qty, special_instructions, is_catering, catering_size}]
+let editingInstrIdx = null;
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', async () => {
+    const user = api.getCurrentUser();
+    if (!user || (user.role !== 'staff' && user.role !== 'admin')) {
+        showToast('Staff access required', 'error');
+        window.location.href = '/';
+        return;
+    }
+
+    // Default date = now
+    setToday();
+
+    // Load menu
+    try {
+        const resp = await api.getMenu();
+        allMenuItems = (resp.data || []).filter(i => i.is_active);
+
+        // Build category options
+        const cats = [...new Set(allMenuItems.map(i => i.cat_name).filter(Boolean))];
+        const sel = document.getElementById('category-filter');
+        cats.forEach(c => {
+            const o = document.createElement('option');
+            o.value = c; o.textContent = c;
+            sel.appendChild(o);
+        });
+
+        filterMenu();
+    } catch (e) {
+        document.getElementById('menu-list').innerHTML =
+            '<p class="text-sm text-red-500 text-center">Failed to load menu</p>';
+    }
+});
+
+function setToday() {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    document.getElementById('order-date').value = now.toISOString().slice(0, 16);
+}
+
+// ── Customer lookup ──
+async function lookupCustomer() {
+    const phone = document.getElementById('lookup-phone').value.trim();
+    if (!phone) { showToast('Enter a phone number', 'warning'); return; }
+
+    document.getElementById('customer-found').classList.add('hidden');
+    document.getElementById('customer-new').classList.add('hidden');
+
+    try {
+        const resp = await api.request('/orders/phone-lookup', {
+            method: 'POST',
+            body: JSON.stringify({ phone })
+        });
+        const c = resp.data;
+        document.getElementById('selected-cust-id').value = c.cust_id;
+        document.getElementById('selected-phone').value = phone;
+        document.getElementById('found-name').textContent = c.cust_name;
+        document.getElementById('found-phone').textContent = phone;
+        document.getElementById('customer-found').classList.remove('hidden');
+    } catch (e) {
+        // Not found — show new customer form
+        document.getElementById('selected-cust-id').value = '';
+        document.getElementById('selected-phone').value = phone;
+        document.getElementById('customer-new').classList.remove('hidden');
+    }
+}
+
+// ── Menu filter ──
+function filterMenu() {
+    const q = document.getElementById('item-search').value.toLowerCase();
+    const cat = document.getElementById('category-filter').value;
+    const filtered = allMenuItems.filter(i =>
+        (!q || i.kic_name.toLowerCase().includes(q)) &&
+        (!cat || i.cat_name === cat)
+    );
+    renderMenuList(filtered);
+}
+
+function renderMenuList(items) {
+    const el = document.getElementById('menu-list');
+    if (!items.length) {
+        el.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">No items found</p>';
+        return;
+    }
+    el.innerHTML = items.map(item => {
+        const isCatering = item.is_catering;
+        return `
+        <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50">
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">${escapeHtml(item.kic_name)}</p>
+                <p class="text-xs text-gray-400">${escapeHtml(item.cat_name || '')} · ${formatCurrency(item.kic_price)}</p>
+            </div>
+            ${isCatering ? `
+            <div class="flex items-center gap-1 ml-3">
+                <select id="cat-size-${item.kic_id}" class="text-xs border border-gray-200 rounded px-1 py-1">
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                </select>
+                <button onclick="addItem(${item.kic_id})" class="px-3 py-1.5 bg-orange-600 text-white text-xs rounded-lg hover:bg-orange-700">Add</button>
+            </div>` : `
+            <button onclick="addItem(${item.kic_id})" class="ml-3 px-3 py-1.5 bg-orange-600 text-white text-xs rounded-lg hover:bg-orange-700">Add</button>`}
+        </div>`;
+    }).join('');
+}
+
+// ── Order items ──
+function addItem(kicId) {
+    const menu = allMenuItems.find(i => i.kic_id === kicId);
+    if (!menu) return;
+
+    const isCatering = menu.is_catering;
+    const cateringSize = isCatering
+        ? (document.getElementById(`cat-size-${kicId}`)?.value || 'small')
+        : null;
+
+    const existing = orderItems.find(i => i.kic_id === kicId && i.catering_size === cateringSize);
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        orderItems.push({
+            kic_id: kicId,
+            name: menu.kic_name,
+            price: parseFloat(menu.kic_price),
+            qty: 1,
+            is_catering: isCatering,
+            catering_size: cateringSize,
+            special_instructions: ''
+        });
+    }
+    renderOrderItems();
+    recalculate();
+}
+
+function updateQty(idx, delta) {
+    orderItems[idx].qty = Math.max(1, orderItems[idx].qty + delta);
+    renderOrderItems();
+    recalculate();
+}
+
+function removeItem(idx) {
+    orderItems.splice(idx, 1);
+    renderOrderItems();
+    recalculate();
+}
+
+function openInstrModal(idx) {
+    editingInstrIdx = idx;
+    document.getElementById('instr-item-name').textContent = orderItems[idx].name;
+    document.getElementById('instr-text').value = orderItems[idx].special_instructions || '';
+    document.getElementById('instr-modal').classList.remove('hidden');
+}
+
+function saveInstructions() {
+    if (editingInstrIdx !== null) {
+        orderItems[editingInstrIdx].special_instructions = document.getElementById('instr-text').value;
+        renderOrderItems();
+    }
+    closeInstrModal();
+}
+
+function closeInstrModal() {
+    document.getElementById('instr-modal').classList.add('hidden');
+    editingInstrIdx = null;
+}
+
+function renderOrderItems() {
+    const el = document.getElementById('order-items-list');
+    const noMsg = document.getElementById('no-items-msg');
+    const badge = document.getElementById('item-count-badge');
+
+    if (!orderItems.length) {
+        noMsg.classList.remove('hidden');
+        badge.classList.add('hidden');
+        el.innerHTML = '';
+        el.appendChild(noMsg);
+        return;
+    }
+
+    noMsg.classList.add('hidden');
+    badge.textContent = orderItems.length + ' item' + (orderItems.length > 1 ? 's' : '');
+    badge.classList.remove('hidden');
+
+    el.innerHTML = orderItems.map((item, idx) => {
+        const lineTotal = computeLineTotal(item);
+        return `
+        <div class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg">
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900">${escapeHtml(item.name)}</p>
+                ${item.is_catering ? `<span class="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded">Catering · ${item.catering_size}</span>` : ''}
+                ${item.special_instructions ? `<p class="text-xs text-gray-400 mt-1 italic">${escapeHtml(item.special_instructions)}</p>` : ''}
+                <button onclick="openInstrModal(${idx})" class="text-xs text-orange-500 hover:text-orange-700 mt-1">
+                    ${item.special_instructions ? 'Edit note' : '+ Add note'}
+                </button>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button onclick="updateQty(${idx}, -1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm flex items-center justify-center">−</button>
+                <span class="text-sm font-medium w-5 text-center">${item.qty}</span>
+                <button onclick="updateQty(${idx}, 1)" class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm flex items-center justify-center">+</button>
+                <span class="text-sm font-semibold text-gray-900 w-16 text-right">${formatCurrency(lineTotal)}</span>
+                <button onclick="removeItem(${idx})" class="text-red-400 hover:text-red-600 ml-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ── Pricing ──
+const CATERING_MULTIPLIERS = { small: 4 * 0.9, medium: 6 * 0.9, large: 12 * 0.9 };
+
+function computeLineTotal(item) {
+    if (item.is_catering && item.catering_size) {
+        return item.price * (CATERING_MULTIPLIERS[item.catering_size] || 1) * item.qty;
+    }
+    return item.price * item.qty;
+}
+
+function recalculate() {
+    const subtotal = orderItems.reduce((s, i) => s + computeLineTotal(i), 0);
+    const discType = document.getElementById('discount-type').value;
+    const discVal = parseFloat(document.getElementById('discount-value').value) || 0;
+    const tip = parseFloat(document.getElementById('tip-amount').value) || 0;
+
+    let discAmt = 0;
+    if (discType === 'percent') discAmt = Math.min(subtotal, subtotal * discVal / 100);
+    if (discType === 'fixed')   discAmt = Math.min(subtotal, discVal);
+
+    const total = Math.max(0, subtotal - discAmt + tip);
+
+    document.getElementById('sum-subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('sum-tip').textContent = formatCurrency(tip);
+    document.getElementById('sum-total').textContent = formatCurrency(total);
+
+    const discRow = document.getElementById('sum-discount-row');
+    if (discAmt > 0) {
+        discRow.classList.remove('hidden');
+        document.getElementById('sum-discount').textContent = '-' + formatCurrency(discAmt);
+    } else {
+        discRow.classList.add('hidden');
+    }
+}
+
+// ── Submit ──
+async function submitOrder() {
+    const phone = document.getElementById('selected-phone').value;
+    const custId = document.getElementById('selected-cust-id').value;
+    const newName = document.getElementById('new-name')?.value?.trim();
+    const newEmail = document.getElementById('new-email')?.value?.trim();
+    const orderDateVal = document.getElementById('order-date').value;
+    const errEl = document.getElementById('submit-error');
+    errEl.classList.add('hidden');
+
+    if (!phone) {
+        errEl.textContent = 'Please look up a customer phone number first.';
+        errEl.classList.remove('hidden');
+        return;
+    }
+    if (!custId && !newName) {
+        errEl.textContent = 'Please enter a customer name for the new guest record.';
+        errEl.classList.remove('hidden');
+        return;
+    }
+    if (!orderItems.length) {
+        errEl.textContent = 'Add at least one item.';
+        errEl.classList.remove('hidden');
+        return;
+    }
+
+    const discType = document.getElementById('discount-type').value;
+    const discVal = parseFloat(document.getElementById('discount-value').value) || 0;
+    const tip = parseFloat(document.getElementById('tip-amount').value) || 0;
+    const notes = document.getElementById('order-notes').value.trim();
+
+    const payload = {
+        customer: {
+            phone,
+            ...(custId ? { cust_id: parseInt(custId) } : { name: newName, email: newEmail || undefined })
+        },
+        items: orderItems.map(i => ({
+            kic_id: i.kic_id,
+            quantity: i.qty,
+            special_instructions: i.special_instructions || null,
+            is_catering: i.is_catering,
+            catering_size: i.catering_size || null
+        })),
+        tip_amount: tip,
+        notes: notes || null,
+        ...(orderDateVal ? { order_date: orderDateVal } : {}),
+        ...(discType && discVal ? { discount: { type: discType, value: discVal } } : {})
+    };
+
+    try {
+        const resp = await api.request('/orders', { method: 'POST', body: JSON.stringify(payload) });
+        showToast('Order #' + resp.data.order_id + ' created!', 'success');
+        window.location.href = '/staff/orders/' + resp.data.order_id;
+    } catch (e) {
+        errEl.textContent = e.message || 'Failed to create order. Please try again.';
+        errEl.classList.remove('hidden');
+    }
+}
+</script>
+{% endblock %}
