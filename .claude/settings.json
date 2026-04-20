@@ -2,5 +2,45 @@
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
     "playwright@claude-plugins-official": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit:*)",
+            "command": "source /Users/prasanta/Documents/Python_Projects/.venv/bin/activate && cd /Users/prasanta/Documents/Python_Projects && python -m pytest tests/unit/ -q > /tmp/pytest-pre-commit.txt 2>&1 || { cat /tmp/pytest-pre-commit.txt >&2; python3 -c \"import json,sys; sys.stdout.write(json.dumps({'continue': False, 'stopReason': 'Unit tests failed. Fix before committing. Run: pytest tests/unit/ -q'}))\"; }",
+            "timeout": 60,
+            "statusMessage": "Running unit tests before commit..."
+          },
+          {
+            "type": "command",
+            "if": "Bash(git push:*)",
+            "command": "source /Users/prasanta/Documents/Python_Projects/.venv/bin/activate && cd /Users/prasanta/Documents/Python_Projects && ruff check src/ -q > /tmp/ruff-push.txt 2>&1 || { cat /tmp/ruff-push.txt >&2; python3 -c \"import json,sys; sys.stdout.write(json.dumps({'continue': False, 'stopReason': 'Lint (ruff) failed. Fix with: ruff check src/ --fix'}))\"; }",
+            "timeout": 30,
+            "statusMessage": "Running lint check before push..."
+          },
+          {
+            "type": "command",
+            "if": "Bash(git push:*)",
+            "command": "source /Users/prasanta/Documents/Python_Projects/.venv/bin/activate && cd /Users/prasanta/Documents/Python_Projects && python -m pytest tests/unit/ -q > /tmp/pytest-push.txt 2>&1 || { cat /tmp/pytest-push.txt >&2; python3 -c \"import json,sys; sys.stdout.write(json.dumps({'continue': False, 'stopReason': 'Unit tests failed. Fix before pushing. Run: pytest tests/unit/ -q'}))\"; }",
+            "timeout": 60,
+            "statusMessage": "Running unit tests before push..."
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); echo \"$FILE\" | grep -qE '/migrations/0[0-9]+_.*[.]sql$' && python3 -c \"import json,sys; sys.stdout.write(json.dumps({'hookSpecificOutput': {'hookEventName': 'PreToolUse', 'permissionDecision': 'ask', 'permissionDecisionReason': 'Editing an existing migration file. Never modify existing migrations - create a new numbered file (007_, 008_, ...) instead.'}}))\" || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
   }
 }

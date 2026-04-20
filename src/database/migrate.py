@@ -1,5 +1,4 @@
 """Database migration runner."""
-import os
 import logging
 from pathlib import Path
 import psycopg2
@@ -151,8 +150,6 @@ def get_migration_status():
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
-                applied_versions = get_applied_migrations(cursor)
-
                 # Get applied dates
                 cursor.execute("SELECT version, applied_at FROM schema_migrations")
                 applied_dates = {row[0]: row[1] for row in cursor.fetchall()}

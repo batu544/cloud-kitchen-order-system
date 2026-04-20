@@ -1,6 +1,6 @@
 """Report service for analytics and reporting."""
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Dict
 from src.repositories.report_repository import ReportRepository
 
 

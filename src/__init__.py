@@ -2,7 +2,7 @@
 import logging
 import datetime
 from decimal import Decimal
-from flask import Flask, request
+from flask import Flask
 from flask.json.provider import DefaultJSONProvider
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -10,14 +10,14 @@ from flask_limiter.util import get_remote_address
 from config import Config
 
 limiter = Limiter(key_func=get_remote_address, default_limits=[])
-from src.middleware.error_handler import register_error_handlers
-from src.api.auth import auth_bp
-from src.api.menu import menu_bp
-from src.api.orders import orders_bp
-from src.api.payments import payments_bp
-from src.api.reports import reports_bp
-from src.api.admin import admin_bp
-from src.api.web_routes import web_bp
+from src.middleware.error_handler import register_error_handlers  # noqa: E402
+from src.api.auth import auth_bp  # noqa: E402
+from src.api.menu import menu_bp  # noqa: E402
+from src.api.orders import orders_bp  # noqa: E402
+from src.api.payments import payments_bp  # noqa: E402
+from src.api.reports import reports_bp  # noqa: E402
+from src.api.admin import admin_bp  # noqa: E402
+from src.api.web_routes import web_bp  # noqa: E402
 
 
 class CustomJSONProvider(DefaultJSONProvider):

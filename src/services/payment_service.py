@@ -1,6 +1,6 @@
 """Payment service for payment tracking."""
 from decimal import Decimal
-from typing import Tuple, List, Dict, Optional
+from typing import Tuple, Dict, Optional
 from src.repositories.payment_repository import PaymentRepository
 from src.repositories.order_repository import OrderRepository
 from src.utils.validators import validate_payment_method, validate_payment_status

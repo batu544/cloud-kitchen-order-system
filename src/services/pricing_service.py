@@ -1,7 +1,6 @@
 """Pricing service for catering calculations and discounts (SPEC.md lines 119-147)."""
 from decimal import Decimal
 from typing import Tuple
-from config import Config
 
 
 def calculate_catering_price(base_price: Decimal, size: str) -> Decimal:

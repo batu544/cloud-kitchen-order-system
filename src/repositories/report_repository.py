@@ -30,7 +30,7 @@ class ReportRepository:
 
         with get_db_cursor(commit=False) as cursor:
             cursor.execute(
-                f"""
+                """
                 SELECT
                     DATE_TRUNC(%s, order_date) as period,
                     SUM(total_amount) as total_sales,

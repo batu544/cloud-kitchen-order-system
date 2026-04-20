@@ -1,5 +1,5 @@
 """Menu service for menu and category management."""
-from typing import List, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 from src.repositories.menu_repository import MenuRepository
 
 

@@ -39,7 +39,7 @@ class TestAuthServiceRegister(unittest.TestCase):
 
         ok, msg, data = self.service.register_user(
             username='testuser',
-            password='pass123',
+            password='pass1234',
             phone='1234567890',
             cust_name='Test User'
         )
@@ -52,11 +52,12 @@ class TestAuthServiceRegister(unittest.TestCase):
     def test_register_existing_customer_linked(self):
         self.mock_user_repo.find_by_username.return_value = None
         self.mock_cust_repo.find_by_phone.return_value = {'cust_id': 5, 'cust_name': 'Existing'}
+        self.mock_user_repo.find_by_customer_id.return_value = None
         self.mock_user_repo.create_user.return_value = 2
 
         ok, msg, data = self.service.register_user(
             username='testuser',
-            password='pass123',
+            password='pass1234',
             phone='1234567890',
             cust_name='Test User'
         )
@@ -71,7 +72,7 @@ class TestAuthServiceRegister(unittest.TestCase):
 
         ok, msg, data = self.service.register_user(
             username='testuser',
-            password='pass123',
+            password='pass1234',
             phone='1234567890',
             cust_name='Test User'
         )
@@ -83,7 +84,7 @@ class TestAuthServiceRegister(unittest.TestCase):
     def test_register_invalid_phone(self):
         ok, msg, data = self.service.register_user(
             username='testuser',
-            password='pass123',
+            password='pass1234',
             phone='123',  # too short
             cust_name='Test User'
         )
@@ -96,7 +97,7 @@ class TestAuthServiceRegister(unittest.TestCase):
 
         ok, msg, data = self.service.register_user(
             username='testuser',
-            password='pass123',
+            password='pass1234',
             phone='1234567890',
             cust_name='Test User',
             email='not-an-email'
@@ -108,7 +109,7 @@ class TestAuthServiceRegister(unittest.TestCase):
     def test_register_username_too_short(self):
         ok, msg, data = self.service.register_user(
             username='ab',  # less than 3 chars
-            password='pass123',
+            password='pass1234',
             phone='1234567890',
             cust_name='Test User'
         )

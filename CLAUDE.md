@@ -1,95 +1,197 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository
+Guidance for Claude Code when working in this repository.
+
+## Guidelines
+- Keep responses clean and short — no need to display code change details
+- Use parameterized SQL only — never f-strings or string interpolation in queries
+- All API responses must use `success_response()` / `error_response()` from `src/utils/responses.py`
+- Never commit `.env` — it contains DB credentials and JWT secret
+
+---
 
 ## Project Overview
 
-Cloud Kitchen Order System - A Python-based REST API for managing a local cloud kitchen details present in @SPEC.md file with order management, payment tracking, catering services, and reporting capabilities. Designed for local deployment on Mac with staff access via Wi-Fi.
+**Cloud Kitchen Order System** — Flask REST API + PostgreSQL + Tailwind CSS web UI.
+Local Mac deployment; staff access via Wi-Fi. No external payment gateway.
 
-## Guidelines
-- **keep the response clean and short. No need to display the code change details
+Full spec: `SPEC.md`
 
-## Development Environment
+---
 
-**Python Version**: 3.13
-**Virtual Environment**: `.venv` (already created)
+## Tech Stack
 
-### Setup Commands
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.13, Flask 3.0.2 |
+| Database | PostgreSQL, role `kitchen_user` |
+| Auth | PyJWT 2.8.0, bcrypt 4.1.2 |
+| Rate limiting | Flask-Limiter 3.5.0 |
+| CORS | Flask-CORS 4.0.0 |
+| Frontend | Tailwind CSS (CDN), vanilla JS |
+
+---
+
+## Development Commands
+
 ```bash
-source .venv/bin/activate  # Activate virtual environment
-pip install -r requirements.txt  # Install dependencies (when created)
+source .venv/bin/activate           # Activate virtual environment
+pip install -r requirements.txt     # Install dependencies
+python run.py                       # Start server (0.0.0.0:5000)
+
+python -m src.database.migrate      # Run SQL migrations
+python -m src.database.seed         # Load demo data (admin/staff/customer users + menu)
+
+pytest tests/                       # All tests
+pytest tests/unit/ -q               # Unit tests only (fast)
+pytest tests/e2e/                   # End-to-end tests
 ```
 
-## High-Level Architecture
+---
 
-### Backend Stack
-- **Language**: Python (Flask/FastAPI recommended per SPEC.md:230)
-- **Database**: PostgreSQL with role `kitchen_user`
-- **Authentication**: Session-based or JWT tokens for users/staff
-- **Deployment**: Local Mac server, bind to 0.0.0.0 for Wi-Fi access
+## Architecture
 
-## Recommended Technology stack
-- **Backend**: Python
-- **Frontend**: Tailwind css
+Layered: **API Blueprints → Services → Repositories → PostgreSQL**
 
+```
+src/
+├── __init__.py              # Flask app factory (CORS, rate limiter, security headers, blueprints)
+├── api/                     # 6 blueprints (~40 endpoints)
+│   ├── auth.py              # /api/auth — register, login, me, change-password
+│   ├── menu.py              # /api/menu — get items, popular, create/update (admin)
+│   ├── orders.py            # /api/orders — create, track, status, item edits
+│   ├── payments.py          # /api/payments — record manual payments
+│   ├── reports.py           # /api/reports — sales, top-items, top-customers (admin)
+│   ├── admin.py             # /api/admin — user management (admin)
+│   └── web_routes.py        # Serves 15 HTML templates
+├── services/                # Business logic (call these from API, not repositories directly)
+│   ├── auth_service.py
+│   ├── order_service.py     # Order creation, status, item management
+│   ├── pricing_service.py   # Catering calculations, discounts, totals
+│   ├── payment_service.py
+│   ├── menu_service.py
+│   ├── report_service.py
+│   └── customer_service.py
+├── repositories/            # Data access (SQL queries, no business logic here)
+│   ├── base.py              # BaseRepository with CRUD helpers
+│   ├── order_repository.py
+│   ├── customer_repository.py
+│   ├── menu_repository.py
+│   ├── payment_repository.py
+│   ├── user_repository.py
+│   ├── report_repository.py
+│   └── audit_repository.py
+├── models/                  # Dataclass models (Order, OrderItem, Payment, User, MenuItem)
+├── middleware/
+│   ├── auth_middleware.py   # Decorators: require_auth, require_role, optional_auth
+│   └── error_handler.py
+├── utils/
+│   ├── responses.py         # success_response(), error_response()
+│   ├── validators.py        # validate_phone (10 digits), validate_email, validate_order_items
+│   └── security.py          # hash_password, verify_password, generate_token, verify_token
+└── database/
+    ├── connection.py        # ThreadedConnectionPool (min=2, max=10)
+    ├── migrate.py           # Migration runner with version tracking
+    └── seed.py              # Demo data loader
+```
 
-### Data Model Foundation
-The system extends existing `kitch_*` tables:
-- `kitch_category`, `kitch_item_catalg`, `kitch_customer`, `kitch_status`, `kitch_payment`
+---
 
-### Key New Tables (SPEC.md:38-113)
-- **kitch_user**: Authentication and role management (customer/staff/admin)
-- **kitch_order**: Order tracking with discount/tip/tax calculation
-- **kitch_order_item**: Line items including catering tray support
-- **kitch_order_status_history**: Audit trail for order lifecycle
-- **kitch_payment**: Extended with order_id, tip_amount, payment_notes
+## Database Migrations
+
+Files live in `migrations/` and are numbered sequentially:
+
+| File | Contents |
+|---|---|
+| 001 | Base tables: `kitch_category`, `kitch_customer`, `kitch_item_catalg`, `kitch_status`, `kitch_payment` |
+| 002 | `kitch_user` (auth, roles: customer/staff/admin) |
+| 003 | `kitch_order`, `kitch_order_item`, `kitch_order_status_history` |
+| 004 | Extend `kitch_payment` with order_id, tip_amount, payment_notes |
+| 005 | Performance indexes |
+| 006 | `kitch_order_edit_history` (JSONB audit), payment overrides, "Delivered" status |
+
+**Rules:** Never edit existing migration files. New changes = new file (007_, 008_, ...).
+
+---
+
+## Authentication
+
+- JWT Bearer tokens (24h expiry, configurable via `JWT_EXPIRATION_HOURS`)
+- Decorators in `src/middleware/auth_middleware.py`:
+  - `@require_auth` — blocks unauthenticated requests
+  - `@require_role('staff', 'admin')` — enforces role restriction
+  - `@optional_auth` — works with or without token
+
+---
 
 ## Critical Business Logic
 
+### Catering Pricing (`src/services/pricing_service.py`)
+```python
+small  = plate_price * 4  * 0.9
+medium = plate_price * 6  * 0.9
+large  = plate_price * 12 * 0.9
+```
 
-### Reports (Admin Only)
-- `GET /api/reports/sales` - Sales by period
-- `GET /api/reports/top-items` - Best-selling items
-- `GET /api/reports/top-customers` - Top spenders
+### Discount Calculation
+- `discount_type = 'percent'`: `discount_amount` is 0–100 (percentage of subtotal)
+- `discount_type = 'fixed'`: `discount_amount` subtracted directly (capped at subtotal)
+- Staff only — customers cannot apply discounts
 
-## Reporting Queries (SPEC.md:179-209)
+### Order Total
+```
+subtotal = sum(line_total for all items)
+discount = apply_discount(subtotal, type, value)
+total    = (subtotal - discount) + tip_amount   # tax is always 0
+```
+All calculations are server-side. Never trust client-sent totals.
 
-Key aggregations for admin dashboard:
-- **Total sales by day**: Group by `date_trunc('day', order_date)`
-- **Sales by item**: Join `kitch_order_item` + `kitch_order`, sum `line_total`
-- **Top customers**: Join `kitch_order` + `kitch_customer`, sum `total_amount`
+### Phone Linking
+- Phone must be exactly 10 digits (validated in `src/utils/validators.py`)
+- On order creation: if phone matches `kitch_customer.cust_phone_number`, link `cust_id` to order
 
-See SPEC.md lines 180-209 for complete SQL examples.
+---
 
-## Security Requirements (SPEC.md:235-239)
+## Testing
 
-- Password hashing: bcrypt
-- Role-based access: Validate user role for staff/admin endpoints
-- Phone uniqueness: Enforce for registered customers
-- Audit logging: Track all status and payment changes via `changed_by_user_id`
+```
+tests/
+├── unit/
+│   ├── test_pricing_service.py   # Catering, discounts, totals (48 tests)
+│   ├── test_order_service.py
+│   ├── test_auth_service.py
+│   ├── test_menu_service.py
+│   ├── test_payment_service.py
+│   └── test_validators.py
+├── integration/                  # Real PostgreSQL tests
+└── e2e/
+    ├── conftest.py               # Fixtures, test DB setup
+    └── test_app.py               # Full user flows
+```
 
-## User Flows
+Always run `pytest tests/unit/` before committing pricing or validation changes.
 
-### Guest Checkout (SPEC.md:217-218)
-1. Browse menu (no login)
-2. Add to cart with quantities/special instructions
-3. Provide name + phone at checkout
-4. Receive `order_ref` for tracking
+---
 
-### Staff Phone Order (SPEC.md:219-220)
-1. Staff searches by phone
-2. System links to `kitch_customer` if exists
-3. Staff adds items, applies discounts (percent or fixed)
-4. Records manual payment with optional tip
+## Frontend
 
-### Order Tracking (SPEC.md:222)
-Public tracking via `order_ref` shows status timeline from `kitch_order_status_history`.
+15 Tailwind CSS templates in `src/web/templates/`. JS files in `src/web/static/js/`:
 
-## Testing Focus (SPEC.md:243-249)
+| File | Purpose |
+|---|---|
+| `api.js` | REST client wrapper with Bearer token injection |
+| `cart.js` | Cart state in localStorage (supports catering sizes) |
+| `utils.js` | `showToast()`, `formatCurrency()`, `validatePhone()` |
+| `staff-dashboard.js` | Daily order list, status updates, pagination |
+| `staff-order-detail.js` | Order editing, item management |
 
-- Unit tests for catering price calculations
-- Discount computation (percent vs fixed)
-- Phone lookup and customer linking
-- Order total calculations with all modifiers
-- Payment status transitions
-- Report query accuracy with sample data
+Primary color: `orange-600`. Background: `gray-*`.
+
+---
+
+## Security
+
+- `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, CSP headers on all responses
+- Rate limits: register 5/min, login 10/min
+- Input validation at API boundary; business rules enforced in services
+- Audit trail: `kitch_order_status_history` and `kitch_order_edit_history` (JSONB)
