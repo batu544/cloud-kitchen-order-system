@@ -86,3 +86,9 @@ def register():
 def admin_users():
     """Admin user management page."""
     return render_template('admin_users.html')
+
+
+@web_bp.route('/admin/menu')
+def admin_menu():
+    """Admin menu management page."""
+    return render_template('admin_menu.html')

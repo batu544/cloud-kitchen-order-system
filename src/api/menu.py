@@ -5,6 +5,7 @@ from src.services.menu_service import MenuService
 from src.repositories.report_repository import ReportRepository
 from src.middleware.auth_middleware import require_auth, require_role
 from src.utils.responses import success_response, error_response
+from src.utils.security import decode_jwt_token, extract_token_from_header
 
 menu_bp = Blueprint('menu', __name__, url_prefix='/api/menu')
 menu_service = MenuService()
@@ -23,20 +24,32 @@ def get_menu():
     Query parameters:
         category_id: Optional category filter
         is_catering: Optional catering items filter (true/false)
+        include_inactive: Include inactive items (admin only, requires auth)
 
     Returns:
         200: Menu data with categories and items
     """
     category_id = request.args.get('category_id', type=int)
     is_catering = request.args.get('is_catering')
+    include_inactive_param = request.args.get('include_inactive', '').lower() in ['true', '1', 'yes']
 
     # Convert is_catering to boolean
     if is_catering is not None:
         is_catering = is_catering.lower() in ['true', '1', 'yes']
 
+    # include_inactive only allowed for admin users
+    include_inactive = False
+    if include_inactive_param:
+        token = extract_token_from_header(request.headers.get('Authorization'))
+        if token:
+            payload = decode_jwt_token(token)
+            if payload and payload.get('role') == 'admin':
+                include_inactive = True
+
     menu_data = menu_service.get_full_menu(
         category_id=category_id,
-        is_catering=is_catering
+        is_catering=is_catering,
+        include_inactive=include_inactive
     )
 
     return success_response(menu_data)
@@ -198,6 +211,29 @@ def update_item(kic_id):
         data['price'] = float(data['price'])
 
     success, message = menu_service.update_item(kic_id, **data)
+
+    if success:
+        return success_response(None, message)
+    else:
+        return error_response(message, 400)
+
+
+@menu_bp.route('/items/<int:kic_id>', methods=['DELETE'])
+@require_auth
+@require_role('admin')
+def delete_item(kic_id):
+    """
+    Deactivate a menu item (admin only). Uses soft-delete to preserve order history.
+
+    Args:
+        kic_id: Menu item ID
+
+    Returns:
+        200: Item deactivated
+        400: Item not found or error
+        403: Forbidden (not admin)
+    """
+    success, message = menu_service.delete_item(kic_id)
 
     if success:
         return success_response(None, message)

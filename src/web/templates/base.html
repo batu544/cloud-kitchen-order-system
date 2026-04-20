@@ -65,6 +65,7 @@
                             <a id="nav-dashboard" href="/staff/dashboard" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">Dashboard</a>
                             <a id="nav-reports" href="/staff/reports" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">Reports</a>
                             <a id="nav-users" href="/admin/users" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">User Management</a>
+                            <a id="nav-menu-mgmt" href="/admin/menu" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">Menu Management</a>
                             <a id="nav-my-orders" href="/my-orders" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">My Orders</a>
                             <div class="border-t border-gray-100 my-1"></div>
                             <button id="logout-btn" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">Logout</button>
@@ -113,6 +114,7 @@
                 if (user.role === 'admin') {
                     document.getElementById('nav-reports').classList.remove('hidden');
                     document.getElementById('nav-users').classList.remove('hidden');
+                    document.getElementById('nav-menu-mgmt').classList.remove('hidden');
                 }
                 if (user.role === 'customer') {
                     document.getElementById('nav-my-orders').classList.remove('hidden');

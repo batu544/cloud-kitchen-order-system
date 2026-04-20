@@ -9,7 +9,7 @@ class MenuService:
     def __init__(self):
         self.menu_repo = MenuRepository()
 
-    def get_full_menu(self, category_id: int = None, is_catering: bool = None) -> Dict:
+    def get_full_menu(self, category_id: int = None, is_catering: bool = None, include_inactive: bool = False) -> Dict:
         """
         Get full menu with categories and items.
 
@@ -24,7 +24,7 @@ class MenuService:
         items = self.menu_repo.get_all_items(
             category_id=category_id,
             is_catering=is_catering,
-            is_active=True
+            is_active=None if include_inactive else True
         )
 
         # Group items by category
@@ -90,6 +90,26 @@ class MenuService:
 
         except Exception as e:
             return False, f"Error creating menu item: {str(e)}", None
+
+    def delete_item(self, kic_id: int) -> Tuple[bool, str]:
+        """
+        Deactivate a menu item (soft-delete).
+
+        Args:
+            kic_id: Item ID
+
+        Returns:
+            Tuple of (success, message)
+        """
+        item = self.menu_repo.get_item_by_id(kic_id)
+        if not item:
+            return False, "Menu item not found"
+
+        success = self.menu_repo.update_item(kic_id, is_active=False)
+        if success:
+            return True, "Menu item deactivated"
+        else:
+            return False, "Failed to deactivate menu item"
 
     def update_item(self, kic_id: int, **kwargs) -> Tuple[bool, str]:
         """

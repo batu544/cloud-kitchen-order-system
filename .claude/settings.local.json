@@ -32,7 +32,8 @@
       "mcp__plugin_playwright_playwright__browser_tabs",
       "Bash(curl -s -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\": \"admin@kitchen.com\", \"password\": \"admin123\"}')",
       "Bash(python3 -m json.tool)",
-      "Bash(curl -s -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\": \"admin@kitchen.com\", \"password\": \"password123\"}')"
+      "Bash(curl -s -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\": \"admin@kitchen.com\", \"password\": \"password123\"}')",
+      "Bash(wc -l /Users/prasanta/Documents/Python_Projects/src/**/*.py)"
     ],
     "deny": [],
     "ask": []
