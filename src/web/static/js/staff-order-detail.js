@@ -102,7 +102,7 @@ function renderOrderItems() {
     }
 
     container.innerHTML = currentOrder.items.map(item => {
-        const isCatering = item.is_catering;
+        const isCatering = item.is_catering && item.catering_size;
         const cateringText = isCatering ? ` (${item.catering_size} tray)` : '';
 
         return `

@@ -267,6 +267,15 @@ class OrderRepository(BaseRepository):
                         """,
                         (status_id, order_id)
                     )
+                    # Also mark all individual payment records as refunded
+                    cursor.execute(
+                        """
+                        UPDATE kitch_payment
+                        SET payment_status = 'refunded'
+                        WHERE order_id = %s AND payment_status NOT IN ('refunded', 'cancelled')
+                        """,
+                        (order_id,)
+                    )
                 else:
                     cursor.execute(
                         """

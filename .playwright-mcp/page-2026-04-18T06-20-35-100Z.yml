@@ -1,0 +1,140 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "🍽️ Cloud Kitchen" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 🍽️ Cloud Kitchen
+        - generic [ref=e8]:
+          - link "Menu" [ref=e9] [cursor=pointer]:
+            - /url: /menu
+          - link "Track Order" [ref=e10] [cursor=pointer]:
+            - /url: /track
+      - generic [ref=e11]:
+        - link [ref=e12] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e13]
+        - button "admin@kitchen.com" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: admin@kitchen.com
+          - img [ref=e18]
+  - main [ref=e20]:
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - heading "Staff Dashboard" [level=1] [ref=e25]
+        - paragraph [ref=e26]: Manage today's orders
+      - generic [ref=e27]:
+        - textbox [ref=e28]: 2026-04-18
+        - combobox [ref=e29]:
+          - option "All Statuses" [selected]
+          - option "Pending"
+          - option "Confirmed"
+          - option "Preparing"
+          - option "Ready"
+          - option "Completed"
+          - option "Cancelled"
+        - link "+ New Order" [ref=e30] [cursor=pointer]:
+          - /url: /staff/orders/new
+        - button "Refresh" [ref=e31] [cursor=pointer]:
+          - img [ref=e32]
+          - text: Refresh
+    - generic [ref=e34]:
+      - table [ref=e37]:
+        - rowgroup [ref=e38]:
+          - row "Order ID Customer Phone Items Total Status Payment Next Status Actions" [ref=e39]:
+            - columnheader [ref=e40]:
+              - checkbox [ref=e41]
+            - columnheader "Order ID" [ref=e42]
+            - columnheader "Customer" [ref=e43]
+            - columnheader "Phone" [ref=e44]
+            - columnheader "Items" [ref=e45]
+            - columnheader "Total" [ref=e46]
+            - columnheader "Status" [ref=e47]
+            - columnheader "Payment" [ref=e48]
+            - columnheader "Next Status" [ref=e49]
+            - columnheader "Actions" [ref=e50]
+        - rowgroup [ref=e51]:
+          - row "#29 John Doe (555) 123-4567 1 $12.00 Confirmed pending Prepare View" [ref=e131]:
+            - cell [ref=e132]:
+              - checkbox [ref=e133]
+            - cell "#29" [ref=e134]:
+              - link "#29" [ref=e135] [cursor=pointer]:
+                - /url: /staff/orders/29
+            - cell "John Doe" [ref=e136]
+            - cell "(555) 123-4567" [ref=e137]
+            - cell "1" [ref=e138]
+            - cell "$12.00" [ref=e139]
+            - cell "Confirmed" [ref=e140]:
+              - generic [ref=e141]: Confirmed
+            - cell "pending" [ref=e142]:
+              - generic [ref=e143]: pending
+            - cell "Prepare" [ref=e144]:
+              - button "Prepare" [ref=e145] [cursor=pointer]
+            - cell "View" [ref=e146]:
+              - link "View" [ref=e147] [cursor=pointer]:
+                - /url: /staff/orders/29
+          - row "#28 Prasanta Pradhan (203) 715-3608 1 $12.00 Pending pending Confirm View" [ref=e148]:
+            - cell [ref=e149]:
+              - checkbox [ref=e150]
+            - cell "#28" [ref=e151]:
+              - link "#28" [ref=e152] [cursor=pointer]:
+                - /url: /staff/orders/28
+            - cell "Prasanta Pradhan" [ref=e153]
+            - cell "(203) 715-3608" [ref=e154]
+            - cell "1" [ref=e155]
+            - cell "$12.00" [ref=e156]
+            - cell "Pending" [ref=e157]:
+              - generic [ref=e158]: Pending
+            - cell "pending" [ref=e159]:
+              - generic [ref=e160]: pending
+            - cell "Confirm" [ref=e161]:
+              - button "Confirm" [ref=e162] [cursor=pointer]
+            - cell "View" [ref=e163]:
+              - link "View" [ref=e164] [cursor=pointer]:
+                - /url: /staff/orders/28
+          - row "#27 james (444) 555-7777 1 $12.00 Confirmed pending Prepare View" [ref=e165]:
+            - cell [ref=e166]:
+              - checkbox [ref=e167]
+            - cell "#27" [ref=e168]:
+              - link "#27" [ref=e169] [cursor=pointer]:
+                - /url: /staff/orders/27
+            - cell "james" [ref=e170]
+            - cell "(444) 555-7777" [ref=e171]
+            - cell "1" [ref=e172]
+            - cell "$12.00" [ref=e173]
+            - cell "Confirmed" [ref=e174]:
+              - generic [ref=e175]: Confirmed
+            - cell "pending" [ref=e176]:
+              - generic [ref=e177]: pending
+            - cell "Prepare" [ref=e178]:
+              - button "Prepare" [ref=e179] [cursor=pointer]
+            - cell "View" [ref=e180]:
+              - link "View" [ref=e181] [cursor=pointer]:
+                - /url: /staff/orders/27
+          - row "#26 hemanta (998) 009-9845 6 $597.60 Preparing pending Mark Ready View" [ref=e182]:
+            - cell [ref=e183]:
+              - checkbox [ref=e184]
+            - cell "#26" [ref=e185]:
+              - link "#26" [ref=e186] [cursor=pointer]:
+                - /url: /staff/orders/26
+            - cell "hemanta" [ref=e187]
+            - cell "(998) 009-9845" [ref=e188]
+            - cell "6" [ref=e189]
+            - cell "$597.60" [ref=e190]
+            - cell "Preparing" [ref=e191]:
+              - generic [ref=e192]: Preparing
+            - cell "pending" [ref=e193]:
+              - generic [ref=e194]: pending
+            - cell "Mark Ready" [ref=e195]:
+              - button "Mark Ready" [ref=e196] [cursor=pointer]
+            - cell "View" [ref=e197]:
+              - link "View" [ref=e198] [cursor=pointer]:
+                - /url: /staff/orders/26
+      - generic [ref=e120]:
+        - generic [ref=e121]: Showing 1 to 4 of 4 orders
+        - generic [ref=e122]:
+          - button "Previous" [disabled] [ref=e123]
+          - button "1" [ref=e199] [cursor=pointer]
+          - button "Next" [disabled] [ref=e126]
+  - contentinfo [ref=e127]:
+    - paragraph [ref=e130]: © 2024 Cloud Kitchen Order System. All rights reserved.
+  - generic [ref=e200]: Status updated

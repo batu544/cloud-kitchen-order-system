@@ -121,6 +121,7 @@ async function loadOrders(page = 1) {
             renderPagination(data.pagination);
             document.getElementById('pagination').classList.remove('hidden');
         } else {
+            document.getElementById('orders-table-body').innerHTML = '';
             document.getElementById('empty-state').classList.remove('hidden');
         }
 
@@ -168,11 +169,6 @@ function renderOrdersTable(orders) {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                     ${getNextStatusButton(order)}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <a href="/staff/orders/${order.order_id}" class="text-orange-600 hover:text-orange-700">
-                        View
-                    </a>
                 </td>
             </tr>
         `;
@@ -337,16 +333,23 @@ function getPaymentClass(paymentStatus) {
 }
 
 // Next status progression map (matches DB: 1=Pending,2=Confirmed,3=Preparing,4=Ready,5=Completed,6=Cancelled)
+// Status 4 (Ready) triggers payment modal instead of direct status advance.
+// Completed and Cancelled show no next action — use order detail page.
 const NEXT_STATUS = {
     1: { id: 2, label: 'Confirm' },
     2: { id: 3, label: 'Prepare' },
-    3: { id: 4, label: 'Mark Ready' },
-    4: { id: 5, label: 'Complete' },
-    5: { id: 6, label: 'Cancel' }
+    3: { id: 4, label: 'Mark Ready' }
 };
 
 // Helper: Get next status button HTML
 function getNextStatusButton(order) {
+    // Ready (4) → open payment modal
+    if (order.current_status_id === 4) {
+        return `<button onclick="openPaymentModal(${order.order_id}, ${order.total_amount})"
+            class="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition font-medium">
+            Ready for Payment
+        </button>`;
+    }
     const next = NEXT_STATUS[order.current_status_id];
     if (!next) return '<span class="text-gray-400 text-xs">—</span>';
     return `<button onclick="advanceStatus(${order.order_id}, ${next.id})"
@@ -366,6 +369,82 @@ async function advanceStatus(orderId, nextStatusId) {
         await loadOrders(currentPage);
     } catch (error) {
         handleAPIError(error);
+    }
+}
+
+// ── Payment Modal ────────────────────────────────────────────────────────────
+
+let _paymentOrderId = null;
+
+function openPaymentModal(orderId, orderTotal) {
+    _paymentOrderId = orderId;
+
+    document.getElementById('pay-modal-order-id').textContent = `#${orderId}`;
+    document.getElementById('pay-modal-order-total').textContent = formatCurrency(orderTotal);
+    document.getElementById('pay-amount').value = parseFloat(orderTotal).toFixed(2);
+    document.getElementById('pay-method').value = '';
+    document.getElementById('pay-status').value = 'paid';
+    document.getElementById('pay-tip').value = '0';
+    document.getElementById('pay-notes').value = '';
+    document.getElementById('pay-error').classList.add('hidden');
+    document.getElementById('pay-submit-btn').disabled = false;
+    document.getElementById('pay-submit-btn').textContent = 'Confirm Payment';
+
+    document.getElementById('payment-modal').classList.remove('hidden');
+}
+
+function closePaymentModal() {
+    document.getElementById('payment-modal').classList.add('hidden');
+    _paymentOrderId = null;
+}
+
+async function submitPayment(event) {
+    event.preventDefault();
+    if (!_paymentOrderId) return;
+
+    const amount = parseFloat(document.getElementById('pay-amount').value);
+    const method = document.getElementById('pay-method').value;
+    const status = document.getElementById('pay-status').value;
+    const tip = parseFloat(document.getElementById('pay-tip').value) || 0;
+    const notes = document.getElementById('pay-notes').value.trim();
+
+    const errorEl = document.getElementById('pay-error');
+    errorEl.classList.add('hidden');
+
+    if (!method) {
+        errorEl.textContent = 'Please select a payment method.';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    const submitBtn = document.getElementById('pay-submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
+
+    try {
+        // 1. Record the payment
+        await api.recordPayment(_paymentOrderId, {
+            amount,
+            payment_method: method,
+            payment_status: status,
+            tip_amount: tip,
+            payment_notes: notes || null
+        });
+
+        // 2. Advance order status to Completed (5)
+        await api.request(`/orders/${_paymentOrderId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status_id: 5, note: 'Payment accepted' })
+        });
+
+        showToast('Payment recorded — order completed!', 'success');
+        closePaymentModal();
+        await loadOrders(currentPage);
+    } catch (error) {
+        errorEl.textContent = error.message || 'Failed to record payment. Please try again.';
+        errorEl.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirm Payment';
     }
 }
 

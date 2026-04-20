@@ -38,7 +38,7 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
-def generate_jwt_token(user_id: int, username: str, role: str) -> str:
+def generate_jwt_token(user_id: int, username: str, role: str, cust_id: int = None) -> str:
     """
     Generate a JWT token for a user.
 
@@ -46,6 +46,7 @@ def generate_jwt_token(user_id: int, username: str, role: str) -> str:
         user_id: User's database ID
         username: User's username
         role: User's role (customer, staff, admin)
+        cust_id: Optional linked customer ID
 
     Returns:
         JWT token string
@@ -59,6 +60,8 @@ def generate_jwt_token(user_id: int, username: str, role: str) -> str:
         'exp': expiration,
         'iat': datetime.utcnow()
     }
+    if cust_id is not None:
+        payload['cust_id'] = cust_id
 
     token = jwt.encode(payload, Config.JWT_SECRET_KEY, algorithm='HS256')
     return token

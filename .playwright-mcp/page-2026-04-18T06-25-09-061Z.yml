@@ -1,0 +1,28 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "🍽️ Cloud Kitchen" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 🍽️ Cloud Kitchen
+        - generic [ref=e8]:
+          - link "Menu" [ref=e9] [cursor=pointer]:
+            - /url: /menu
+          - link "Track Order" [ref=e10] [cursor=pointer]:
+            - /url: /track
+      - generic [ref=e11]:
+        - link [ref=e12] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e13]
+        - button "admin@kitchen.com" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: admin@kitchen.com
+          - img [ref=e18]
+  - main [ref=e20]:
+    - generic [ref=e22]:
+      - heading "Track Your Order" [level=1] [ref=e23]
+      - paragraph [ref=e24]: Enter your order ID to see the status
+    - generic [ref=e27]:
+      - spinbutton [ref=e28]
+      - button "Track Order" [ref=e29] [cursor=pointer]
+  - contentinfo [ref=e30]:
+    - paragraph [ref=e33]: © 2024 Cloud Kitchen Order System. All rights reserved.

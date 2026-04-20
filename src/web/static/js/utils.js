@@ -54,7 +54,7 @@ function validateEmail(email) {
 // Show toast notification
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 ${
+    toast.className = `fixed bottom-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 ${
         type === 'success' ? 'bg-green-500' :
         type === 'error' ? 'bg-red-500' :
         type === 'warning' ? 'bg-yellow-500' :

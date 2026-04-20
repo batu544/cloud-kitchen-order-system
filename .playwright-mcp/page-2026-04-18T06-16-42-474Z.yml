@@ -1,0 +1,98 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "🍽️ Cloud Kitchen" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 🍽️ Cloud Kitchen
+        - generic [ref=e8]:
+          - link "Menu" [ref=e9] [cursor=pointer]:
+            - /url: /menu
+          - link "Track Order" [ref=e10] [cursor=pointer]:
+            - /url: /track
+      - generic [ref=e11]:
+        - link [ref=e12] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e13]
+        - generic [ref=e15]:
+          - link "Login" [ref=e16] [cursor=pointer]:
+            - /url: /login
+          - link "Sign Up" [ref=e17] [cursor=pointer]:
+            - /url: /register
+  - main [ref=e18]:
+    - generic [ref=e20]:
+      - heading "Track Your Order" [level=1] [ref=e21]
+      - paragraph [ref=e22]: Enter your order ID to see the status
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - spinbutton [ref=e26]: "29"
+          - button "Track Order" [ref=e27] [cursor=pointer]
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic [ref=e34]: "1"
+            - generic [ref=e35]: Pending
+          - generic [ref=e36]:
+            - generic [ref=e38]: "2"
+            - generic [ref=e39]: Confirmed
+          - generic [ref=e40]:
+            - generic [ref=e42]: "3"
+            - generic [ref=e43]: Preparing
+          - generic [ref=e44]:
+            - generic [ref=e46]: "4"
+            - generic [ref=e47]: Ready
+          - generic [ref=e48]:
+            - generic [ref=e50]: "5"
+            - generic [ref=e51]: Completed
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - generic [ref=e55]:
+              - 'heading "Order #29" [level=2] [ref=e56]'
+              - paragraph [ref=e57]: Placed on 4/18/2026, 2:16:39 AM
+            - generic [ref=e59]: Pending
+          - generic [ref=e61]:
+            - generic [ref=e62]:
+              - paragraph [ref=e63]: Customer
+              - paragraph [ref=e64]: John Doe
+            - generic [ref=e65]:
+              - paragraph [ref=e66]: Phone
+              - paragraph [ref=e67]: "***-***-4567"
+            - generic [ref=e68]:
+              - paragraph [ref=e69]: Delivery Address
+              - paragraph [ref=e70]: "*** (hidden for privacy)"
+        - generic [ref=e71]:
+          - heading "Order Status" [level=3] [ref=e72]
+          - generic [ref=e74]:
+            - img [ref=e77]
+            - generic [ref=e79]:
+              - generic [ref=e80]:
+                - generic [ref=e81]: Pending
+                - generic [ref=e82]: 4/18/2026, 2:16:39 AM
+              - paragraph [ref=e83]: Order created
+        - generic [ref=e84]:
+          - heading "Order Items" [level=3] [ref=e85]
+          - generic [ref=e87]:
+            - generic [ref=e88]:
+              - generic [ref=e89]: Egg Biriyani
+              - generic [ref=e90]: "Quantity: 1"
+            - generic [ref=e91]:
+              - generic [ref=e92]: $12.00
+              - generic [ref=e93]: $12.00 each
+        - generic [ref=e94]:
+          - heading "Order Summary" [level=3] [ref=e95]
+          - generic [ref=e96]:
+            - generic [ref=e97]:
+              - generic [ref=e98]: Subtotal
+              - generic [ref=e99]: $12.00
+            - generic [ref=e100]:
+              - generic [ref=e101]: Tax
+              - generic [ref=e102]: $0.00
+            - generic [ref=e103]:
+              - generic [ref=e104]: Total
+              - generic [ref=e105]: $12.00
+          - generic [ref=e107]:
+            - generic [ref=e108]: Payment Method
+            - generic [ref=e109]: pending
+  - contentinfo [ref=e110]:
+    - paragraph [ref=e113]: © 2024 Cloud Kitchen Order System. All rights reserved.

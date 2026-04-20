@@ -20,7 +20,19 @@
       "Bash(python -c \":*)",
       "Bash(pkill -f \"python run.py\")",
       "Bash(curl -s http://localhost:5001/api/admin/users)",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''message'''',''''ok''''\\), d.get\\(''''success''''\\)\\)\")"
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''message'''',''''ok''''\\), d.get\\(''''success''''\\)\\)\")",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_fill_form",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_type",
+      "Bash(curl -s http://localhost:5001/)",
+      "mcp__plugin_playwright_playwright__browser_run_code",
+      "mcp__plugin_playwright_playwright__browser_tabs",
+      "Bash(curl -s -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\": \"admin@kitchen.com\", \"password\": \"admin123\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\": \"admin@kitchen.com\", \"password\": \"password123\"}')"
     ],
     "deny": [],
     "ask": []

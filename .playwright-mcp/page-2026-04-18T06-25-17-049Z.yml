@@ -1,0 +1,96 @@
+- generic [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "🍽️ Cloud Kitchen" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 🍽️ Cloud Kitchen
+        - generic [ref=e8]:
+          - link "Menu" [ref=e9] [cursor=pointer]:
+            - /url: /menu
+          - link "Track Order" [ref=e10] [cursor=pointer]:
+            - /url: /track
+      - generic [ref=e11]:
+        - link [ref=e12] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e13]
+        - button "admin@kitchen.com" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: admin@kitchen.com
+          - img [ref=e18]
+  - main [ref=e20]:
+    - generic [ref=e22]:
+      - heading "Track Your Order" [level=1] [ref=e23]
+      - paragraph [ref=e24]: Enter your order ID to see the status
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - spinbutton [ref=e28]: "30"
+          - button "Track Order" [active] [ref=e29] [cursor=pointer]
+        - generic [ref=e37]:
+          - generic [ref=e38]:
+            - generic [ref=e40]: "1"
+            - generic [ref=e41]: Pending
+          - generic [ref=e42]:
+            - generic [ref=e44]: "2"
+            - generic [ref=e45]: Confirmed
+          - generic [ref=e46]:
+            - generic [ref=e48]: "3"
+            - generic [ref=e49]: Preparing
+          - generic [ref=e50]:
+            - generic [ref=e52]: "4"
+            - generic [ref=e53]: Ready
+          - generic [ref=e54]:
+            - generic [ref=e56]: "5"
+            - generic [ref=e57]: Completed
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - 'heading "Order #30" [level=2] [ref=e62]'
+              - paragraph [ref=e63]: Placed on 4/18/2026, 12:00:00 AM
+            - generic [ref=e65]: Pending
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - paragraph [ref=e69]: Customer
+              - paragraph [ref=e70]: Prasanta Pradhan
+            - generic [ref=e71]:
+              - paragraph [ref=e72]: Phone
+              - paragraph [ref=e73]: "***-***-3608"
+            - generic [ref=e74]:
+              - paragraph [ref=e75]: Delivery Address
+              - paragraph [ref=e76]: "*** (hidden for privacy)"
+        - generic [ref=e77]:
+          - heading "Order Status" [level=3] [ref=e78]
+          - generic [ref=e80]:
+            - img [ref=e83]
+            - generic [ref=e85]:
+              - generic [ref=e86]:
+                - generic [ref=e87]: Pending
+                - generic [ref=e88]: 4/18/2026, 2:24:21 AM
+              - paragraph [ref=e89]: Order created
+        - generic [ref=e90]:
+          - heading "Order Items" [level=3] [ref=e91]
+          - generic [ref=e93]:
+            - generic [ref=e94]:
+              - generic [ref=e95]: Biryani
+              - generic [ref=e96]: "Quantity: 1"
+            - generic [ref=e97]:
+              - generic [ref=e98]: $13.99
+              - generic [ref=e99]: $13.99 each
+        - generic [ref=e100]:
+          - heading "Order Summary" [level=3] [ref=e101]
+          - generic [ref=e102]:
+            - generic [ref=e103]:
+              - generic [ref=e104]: Subtotal
+              - generic [ref=e105]: $13.99
+            - generic [ref=e106]:
+              - generic [ref=e107]: Tax
+              - generic [ref=e108]: $0.00
+            - generic [ref=e109]:
+              - generic [ref=e110]: Total
+              - generic [ref=e111]: $13.99
+          - generic [ref=e113]:
+            - generic [ref=e114]: Payment Method
+            - generic [ref=e115]: pending
+  - contentinfo [ref=e30]:
+    - paragraph [ref=e33]: © 2024 Cloud Kitchen Order System. All rights reserved.

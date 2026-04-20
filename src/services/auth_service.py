@@ -92,7 +92,7 @@ class AuthService:
                 return False, "Failed to create user account", None
 
             # Generate JWT token
-            token = generate_jwt_token(user_id, username, 'customer')
+            token = generate_jwt_token(user_id, username, 'customer', cust_id=cust_id)
 
             user_data = {
                 'user_id': user_id,
@@ -137,7 +137,8 @@ class AuthService:
         token = generate_jwt_token(
             user['user_id'],
             user['username'],
-            user['role']
+            user['role'],
+            cust_id=user.get('cust_id')
         )
 
         user_data = {

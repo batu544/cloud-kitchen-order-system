@@ -1,0 +1,284 @@
+- generic [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "🍽️ Cloud Kitchen" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 🍽️ Cloud Kitchen
+        - generic [ref=e8]:
+          - link "Menu" [ref=e9] [cursor=pointer]:
+            - /url: /menu
+          - link "Track Order" [ref=e10] [cursor=pointer]:
+            - /url: /track
+      - generic [ref=e11]:
+        - link [ref=e12] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e13]
+        - button "admin@kitchen.com" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: admin@kitchen.com
+          - img [ref=e18]
+  - main [ref=e20]:
+    - generic [ref=e22]:
+      - heading "Reports" [level=1] [ref=e23]
+      - paragraph [ref=e24]: Analytics and order reporting
+    - generic [ref=e25]:
+      - navigation [ref=e27]:
+        - button "Sales Report" [ref=e28] [cursor=pointer]
+        - button "Orders Report" [ref=e29] [cursor=pointer]
+        - button "Pending Payments 22" [active] [ref=e303] [cursor=pointer]
+      - table [ref=e307]:
+        - rowgroup [ref=e308]:
+          - row "Order ID Date Customer Phone Status Total Paid Balance Due" [ref=e309]:
+            - columnheader "Order ID" [ref=e310]
+            - columnheader "Date" [ref=e311]
+            - columnheader "Customer" [ref=e312]
+            - columnheader "Phone" [ref=e313]
+            - columnheader "Status" [ref=e314]
+            - columnheader "Total" [ref=e315]
+            - columnheader "Paid" [ref=e316]
+            - columnheader "Balance Due" [ref=e317]
+        - rowgroup [ref=e318]:
+          - row "#28 Apr 18, 2026 02:10 AM Prasanta Pradhan 2037153608 Pending $12.00 $0.00 $12.00" [ref=e319] [cursor=pointer]:
+            - cell "#28" [ref=e320]
+            - cell "Apr 18, 2026 02:10 AM" [ref=e321]:
+              - text: Apr 18, 2026
+              - text: 02:10 AM
+            - cell "Prasanta Pradhan" [ref=e322]
+            - cell "2037153608" [ref=e323]
+            - cell "Pending" [ref=e324]
+            - cell "$12.00" [ref=e325]
+            - cell "$0.00" [ref=e326]
+            - cell "$12.00" [ref=e327]
+          - row "#27 Apr 18, 2026 02:01 AM james 4445557777 Pending $12.00 $0.00 $12.00" [ref=e328] [cursor=pointer]:
+            - cell "#27" [ref=e329]
+            - cell "Apr 18, 2026 02:01 AM" [ref=e330]:
+              - text: Apr 18, 2026
+              - text: 02:01 AM
+            - cell "james" [ref=e331]
+            - cell "4445557777" [ref=e332]
+            - cell "Pending" [ref=e333]
+            - cell "$12.00" [ref=e334]
+            - cell "$0.00" [ref=e335]
+            - cell "$12.00" [ref=e336]
+          - row "#30 Apr 18, 2026 12:00 AM Prasanta Pradhan 2037153608 Pending $13.99 $0.00 $13.99" [ref=e337] [cursor=pointer]:
+            - cell "#30" [ref=e338]
+            - cell "Apr 18, 2026 12:00 AM" [ref=e339]:
+              - text: Apr 18, 2026
+              - text: 12:00 AM
+            - cell "Prasanta Pradhan" [ref=e340]
+            - cell "2037153608" [ref=e341]
+            - cell "Pending" [ref=e342]
+            - cell "$13.99" [ref=e343]
+            - cell "$0.00" [ref=e344]
+            - cell "$13.99" [ref=e345]
+          - row "#26 Apr 18, 2026 12:00 AM hemanta 9980099845 Pending $597.60 $0.00 $597.60" [ref=e346] [cursor=pointer]:
+            - cell "#26" [ref=e347]
+            - cell "Apr 18, 2026 12:00 AM" [ref=e348]:
+              - text: Apr 18, 2026
+              - text: 12:00 AM
+            - cell "hemanta" [ref=e349]
+            - cell "9980099845" [ref=e350]
+            - cell "Pending" [ref=e351]
+            - cell "$597.60" [ref=e352]
+            - cell "$0.00" [ref=e353]
+            - cell "$597.60" [ref=e354]
+          - row "#25 Apr 17, 2026 06:47 PM Shreyash 2037153605 Pending $54.03 $0.00 $54.03" [ref=e355] [cursor=pointer]:
+            - cell "#25" [ref=e356]
+            - cell "Apr 17, 2026 06:47 PM" [ref=e357]:
+              - text: Apr 17, 2026
+              - text: 06:47 PM
+            - cell "Shreyash" [ref=e358]
+            - cell "2037153605" [ref=e359]
+            - cell "Pending" [ref=e360]
+            - cell "$54.03" [ref=e361]
+            - cell "$0.00" [ref=e362]
+            - cell "$54.03" [ref=e363]
+          - row "#24 Apr 17, 2026 06:28 PM hemanta 9980099845 Pending $7.99 $0.00 $7.99" [ref=e364] [cursor=pointer]:
+            - cell "#24" [ref=e365]
+            - cell "Apr 17, 2026 06:28 PM" [ref=e366]:
+              - text: Apr 17, 2026
+              - text: 06:28 PM
+            - cell "hemanta" [ref=e367]
+            - cell "9980099845" [ref=e368]
+            - cell "Pending" [ref=e369]
+            - cell "$7.99" [ref=e370]
+            - cell "$0.00" [ref=e371]
+            - cell "$7.99" [ref=e372]
+          - row "#23 Apr 17, 2026 06:18 PM batu 1234569900 Pending $2.99 $0.00 $2.99" [ref=e373] [cursor=pointer]:
+            - cell "#23" [ref=e374]
+            - cell "Apr 17, 2026 06:18 PM" [ref=e375]:
+              - text: Apr 17, 2026
+              - text: 06:18 PM
+            - cell "batu" [ref=e376]
+            - cell "1234569900" [ref=e377]
+            - cell "Pending" [ref=e378]
+            - cell "$2.99" [ref=e379]
+            - cell "$0.00" [ref=e380]
+            - cell "$2.99" [ref=e381]
+          - row "#22 Apr 17, 2026 08:45 AM Prasanta Pradhan 2037153608 Pending $36.00 $0.00 $36.00" [ref=e382] [cursor=pointer]:
+            - cell "#22" [ref=e383]
+            - cell "Apr 17, 2026 08:45 AM" [ref=e384]:
+              - text: Apr 17, 2026
+              - text: 08:45 AM
+            - cell "Prasanta Pradhan" [ref=e385]
+            - cell "2037153608" [ref=e386]
+            - cell "Pending" [ref=e387]
+            - cell "$36.00" [ref=e388]
+            - cell "$0.00" [ref=e389]
+            - cell "$36.00" [ref=e390]
+          - row "#15 Mar 31, 2026 02:42 AM hujl 6889798688 Pending $6.98 $0.00 $6.98" [ref=e391] [cursor=pointer]:
+            - cell "#15" [ref=e392]
+            - cell "Mar 31, 2026 02:42 AM" [ref=e393]:
+              - text: Mar 31, 2026
+              - text: 02:42 AM
+            - cell "hujl" [ref=e394]
+            - cell "6889798688" [ref=e395]
+            - cell "Pending" [ref=e396]
+            - cell "$6.98" [ref=e397]
+            - cell "$0.00" [ref=e398]
+            - cell "$6.98" [ref=e399]
+          - row "#13 Mar 30, 2026 09:20 PM Prasanta Pradhan 2037153608 Pending $2.99 $0.00 $2.99" [ref=e400] [cursor=pointer]:
+            - cell "#13" [ref=e401]
+            - cell "Mar 30, 2026 09:20 PM" [ref=e402]:
+              - text: Mar 30, 2026
+              - text: 09:20 PM
+            - cell "Prasanta Pradhan" [ref=e403]
+            - cell "2037153608" [ref=e404]
+            - cell "Pending" [ref=e405]
+            - cell "$2.99" [ref=e406]
+            - cell "$0.00" [ref=e407]
+            - cell "$2.99" [ref=e408]
+          - row "#12 Mar 30, 2026 09:19 PM test 1236786525 Pending $3.99 $0.00 $3.99" [ref=e409] [cursor=pointer]:
+            - cell "#12" [ref=e410]
+            - cell "Mar 30, 2026 09:19 PM" [ref=e411]:
+              - text: Mar 30, 2026
+              - text: 09:19 PM
+            - cell "test" [ref=e412]
+            - cell "1236786525" [ref=e413]
+            - cell "Pending" [ref=e414]
+            - cell "$3.99" [ref=e415]
+            - cell "$0.00" [ref=e416]
+            - cell "$3.99" [ref=e417]
+          - row "#11 Mar 30, 2026 05:30 PM Prasanta Pradhan 2037153608 Pending $3.99 $0.00 $3.99" [ref=e418] [cursor=pointer]:
+            - cell "#11" [ref=e419]
+            - cell "Mar 30, 2026 05:30 PM" [ref=e420]:
+              - text: Mar 30, 2026
+              - text: 05:30 PM
+            - cell "Prasanta Pradhan" [ref=e421]
+            - cell "2037153608" [ref=e422]
+            - cell "Pending" [ref=e423]
+            - cell "$3.99" [ref=e424]
+            - cell "$0.00" [ref=e425]
+            - cell "$3.99" [ref=e426]
+          - row "#10 Mar 29, 2026 05:26 PM Prasanta Pradhan 2037153608 Pending $11.96 $0.00 $11.96" [ref=e427] [cursor=pointer]:
+            - cell "#10" [ref=e428]
+            - cell "Mar 29, 2026 05:26 PM" [ref=e429]:
+              - text: Mar 29, 2026
+              - text: 05:26 PM
+            - cell "Prasanta Pradhan" [ref=e430]
+            - cell "2037153608" [ref=e431]
+            - cell "Pending" [ref=e432]
+            - cell "$11.96" [ref=e433]
+            - cell "$0.00" [ref=e434]
+            - cell "$11.96" [ref=e435]
+          - row "#9 Mar 29, 2026 12:39 PM Prasanta Pradhan 2037153608 Pending $2.99 $0.00 $2.99" [ref=e436] [cursor=pointer]:
+            - cell "#9" [ref=e437]
+            - cell "Mar 29, 2026 12:39 PM" [ref=e438]:
+              - text: Mar 29, 2026
+              - text: 12:39 PM
+            - cell "Prasanta Pradhan" [ref=e439]
+            - cell "2037153608" [ref=e440]
+            - cell "Pending" [ref=e441]
+            - cell "$2.99" [ref=e442]
+            - cell "$0.00" [ref=e443]
+            - cell "$2.99" [ref=e444]
+          - row "#8 Mar 29, 2026 12:29 PM Prasanta Pradhan 2037153608 Pending $67.99 $0.00 $67.99" [ref=e445] [cursor=pointer]:
+            - cell "#8" [ref=e446]
+            - cell "Mar 29, 2026 12:29 PM" [ref=e447]:
+              - text: Mar 29, 2026
+              - text: 12:29 PM
+            - cell "Prasanta Pradhan" [ref=e448]
+            - cell "2037153608" [ref=e449]
+            - cell "Pending" [ref=e450]
+            - cell "$67.99" [ref=e451]
+            - cell "$0.00" [ref=e452]
+            - cell "$67.99" [ref=e453]
+          - row "#7 Mar 29, 2026 03:16 AM Prasanta Pradhan 2037153608 Pending $2.99 $0.00 $2.99" [ref=e454] [cursor=pointer]:
+            - cell "#7" [ref=e455]
+            - cell "Mar 29, 2026 03:16 AM" [ref=e456]:
+              - text: Mar 29, 2026
+              - text: 03:16 AM
+            - cell "Prasanta Pradhan" [ref=e457]
+            - cell "2037153608" [ref=e458]
+            - cell "Pending" [ref=e459]
+            - cell "$2.99" [ref=e460]
+            - cell "$0.00" [ref=e461]
+            - cell "$2.99" [ref=e462]
+          - row "#6 Mar 29, 2026 02:42 AM Prasanta Pradhan 2037153608 Pending $6.98 $0.00 $6.98" [ref=e463] [cursor=pointer]:
+            - cell "#6" [ref=e464]
+            - cell "Mar 29, 2026 02:42 AM" [ref=e465]:
+              - text: Mar 29, 2026
+              - text: 02:42 AM
+            - cell "Prasanta Pradhan" [ref=e466]
+            - cell "2037153608" [ref=e467]
+            - cell "Pending" [ref=e468]
+            - cell "$6.98" [ref=e469]
+            - cell "$0.00" [ref=e470]
+            - cell "$6.98" [ref=e471]
+          - row "#5 Mar 29, 2026 02:26 AM Prasanta Pradhan 2037153608 Pending $9.42 $0.00 $9.42" [ref=e472] [cursor=pointer]:
+            - cell "#5" [ref=e473]
+            - cell "Mar 29, 2026 02:26 AM" [ref=e474]:
+              - text: Mar 29, 2026
+              - text: 02:26 AM
+            - cell "Prasanta Pradhan" [ref=e475]
+            - cell "2037153608" [ref=e476]
+            - cell "Pending" [ref=e477]
+            - cell "$9.42" [ref=e478]
+            - cell "$0.00" [ref=e479]
+            - cell "$9.42" [ref=e480]
+          - row "#4 Mar 28, 2026 08:36 PM Prasanta Pradhan 2037153608 Pending $2.99 $0.00 $2.99" [ref=e481] [cursor=pointer]:
+            - cell "#4" [ref=e482]
+            - cell "Mar 28, 2026 08:36 PM" [ref=e483]:
+              - text: Mar 28, 2026
+              - text: 08:36 PM
+            - cell "Prasanta Pradhan" [ref=e484]
+            - cell "2037153608" [ref=e485]
+            - cell "Pending" [ref=e486]
+            - cell "$2.99" [ref=e487]
+            - cell "$0.00" [ref=e488]
+            - cell "$2.99" [ref=e489]
+          - row "#3 Mar 28, 2026 08:32 PM Prasanta Pradhan 2037153608 Pending $11.47 $0.00 $11.47" [ref=e490] [cursor=pointer]:
+            - cell "#3" [ref=e491]
+            - cell "Mar 28, 2026 08:32 PM" [ref=e492]:
+              - text: Mar 28, 2026
+              - text: 08:32 PM
+            - cell "Prasanta Pradhan" [ref=e493]
+            - cell "2037153608" [ref=e494]
+            - cell "Pending" [ref=e495]
+            - cell "$11.47" [ref=e496]
+            - cell "$0.00" [ref=e497]
+            - cell "$11.47" [ref=e498]
+          - row "#2 Mar 28, 2026 05:00 PM Prasanta Pradhan 2037153608 Pending $6.98 $0.00 $6.98" [ref=e499] [cursor=pointer]:
+            - cell "#2" [ref=e500]
+            - cell "Mar 28, 2026 05:00 PM" [ref=e501]:
+              - text: Mar 28, 2026
+              - text: 05:00 PM
+            - cell "Prasanta Pradhan" [ref=e502]
+            - cell "2037153608" [ref=e503]
+            - cell "Pending" [ref=e504]
+            - cell "$6.98" [ref=e505]
+            - cell "$0.00" [ref=e506]
+            - cell "$6.98" [ref=e507]
+          - row "#1 Mar 28, 2026 04:40 PM John Doe 1234567890 Pending $30.98 $0.00 $30.98" [ref=e508] [cursor=pointer]:
+            - cell "#1" [ref=e509]
+            - cell "Mar 28, 2026 04:40 PM" [ref=e510]:
+              - text: Mar 28, 2026
+              - text: 04:40 PM
+            - cell "John Doe" [ref=e511]
+            - cell "1234567890" [ref=e512]
+            - cell "Pending" [ref=e513]
+            - cell "$30.98" [ref=e514]
+            - cell "$0.00" [ref=e515]
+            - cell "$30.98" [ref=e516]
+  - contentinfo [ref=e168]:
+    - paragraph [ref=e171]: © 2024 Cloud Kitchen Order System. All rights reserved.

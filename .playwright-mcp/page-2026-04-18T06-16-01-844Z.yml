@@ -1,0 +1,58 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "🍽️ Cloud Kitchen" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 🍽️ Cloud Kitchen
+        - generic [ref=e8]:
+          - link "Menu" [ref=e9] [cursor=pointer]:
+            - /url: /menu
+          - link "Track Order" [ref=e10] [cursor=pointer]:
+            - /url: /track
+      - generic [ref=e11]:
+        - link "1" [ref=e12] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e13]
+          - generic [ref=e15]: "1"
+        - generic [ref=e16]:
+          - link "Login" [ref=e17] [cursor=pointer]:
+            - /url: /login
+          - link "Sign Up" [ref=e18] [cursor=pointer]:
+            - /url: /register
+  - main [ref=e19]:
+    - generic [ref=e21]:
+      - heading "Shopping Cart" [level=1] [ref=e22]
+      - paragraph [ref=e23]: Review your items before checkout
+    - generic [ref=e25]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - heading "Egg Biriyani" [level=3] [ref=e33]
+          - button [ref=e34] [cursor=pointer]:
+            - img [ref=e35]
+        - button "Add special instructions" [ref=e37] [cursor=pointer]
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - button "-" [ref=e40] [cursor=pointer]
+            - spinbutton [ref=e41]: "1"
+            - button "+" [ref=e42] [cursor=pointer]
+          - generic [ref=e43]:
+            - generic [ref=e44]: $12.00 each
+            - generic [ref=e45]: $12.00
+      - generic [ref=e47]:
+        - heading "Order Summary" [level=2] [ref=e48]
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - generic [ref=e51]: Subtotal
+            - generic [ref=e52]: $12.00
+          - generic [ref=e53]:
+            - generic [ref=e54]: Tax
+            - generic [ref=e55]: $0.00
+          - generic [ref=e56]:
+            - generic [ref=e57]: Total
+            - generic [ref=e58]: $12.00
+        - button "Proceed to Checkout" [ref=e59] [cursor=pointer]
+        - link "Continue Shopping" [ref=e60] [cursor=pointer]:
+          - /url: /menu
+  - contentinfo [ref=e61]:
+    - paragraph [ref=e64]: © 2024 Cloud Kitchen Order System. All rights reserved.

@@ -1,0 +1,53 @@
+- generic [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "🍽️ Cloud Kitchen" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 🍽️ Cloud Kitchen
+        - generic [ref=e8]:
+          - link "Menu" [ref=e9] [cursor=pointer]:
+            - /url: /menu
+          - link "Track Order" [ref=e10] [cursor=pointer]:
+            - /url: /track
+      - generic [ref=e11]:
+        - link [ref=e12] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e13]
+        - generic [ref=e15]:
+          - link "Login" [ref=e16] [cursor=pointer]:
+            - /url: /login
+          - link "Sign Up" [ref=e17] [cursor=pointer]:
+            - /url: /register
+  - main [ref=e18]:
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - generic [ref=e22]: 🍽️
+        - heading "Welcome Back" [level=2] [ref=e23]
+        - paragraph [ref=e24]: Sign in to your account
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - generic [ref=e28]: Username or Phone Number
+            - textbox "Username or Phone Number" [active] [ref=e29]:
+              - /placeholder: Username or 10-digit phone
+          - generic [ref=e30]:
+            - generic [ref=e31]: Password
+            - textbox "Password" [ref=e32]:
+              - /placeholder: Enter your password
+          - generic [ref=e33]:
+            - generic [ref=e34]:
+              - checkbox "Remember me" [ref=e35]
+              - generic [ref=e36]: Remember me
+            - link "Forgot password?" [ref=e37] [cursor=pointer]:
+              - /url: "#"
+          - button "Sign In" [ref=e38] [cursor=pointer]
+        - generic [ref=e43]: Don't have an account?
+        - link "Create Account" [ref=e44] [cursor=pointer]:
+          - /url: /register
+      - paragraph [ref=e46]:
+        - text: Just want to order?
+        - link "Continue as guest" [ref=e47] [cursor=pointer]:
+          - /url: /menu
+  - contentinfo [ref=e48]:
+    - paragraph [ref=e51]: © 2024 Cloud Kitchen Order System. All rights reserved.
