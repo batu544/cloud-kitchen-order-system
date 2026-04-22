@@ -30,6 +30,25 @@
     </div>
 </div>
 
+<!-- Tab Navigation -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+    <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-6">
+            <button id="tab-orders" onclick="switchTab('orders')"
+                class="pb-3 px-1 text-sm font-medium border-b-2 border-orange-500 text-orange-600">
+                Orders
+            </button>
+            <button id="tab-items" onclick="switchTab('items')"
+                class="pb-3 px-1 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                Item Count
+            </button>
+        </nav>
+    </div>
+</div>
+
+<!-- PANEL: Orders -->
+<div id="panel-orders">
+
 <!-- Bulk Actions Bar -->
 <div id="bulk-actions-bar" class="hidden bg-blue-50 border-b border-blue-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -116,6 +135,49 @@
         </div>
     </div>
 </div>
+
+</div><!-- /panel-orders -->
+
+<!-- PANEL: Item Count -->
+<div id="panel-items" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Summary cards -->
+    <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 text-center">
+            <p class="text-2xl font-bold text-orange-600" id="items-total-qty">—</p>
+            <p class="text-sm text-gray-500">Total Items to Prepare</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 text-center">
+            <p class="text-2xl font-bold text-gray-900" id="items-unique">—</p>
+            <p class="text-sm text-gray-500">Unique Menu Items</p>
+        </div>
+    </div>
+
+    <!-- Loading state -->
+    <div id="items-loading" class="hidden text-center py-12">
+        <svg class="animate-spin h-8 w-8 text-orange-600 mx-auto" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="mt-4 text-sm text-gray-600">Loading item counts...</p>
+    </div>
+
+    <!-- Table -->
+    <div id="items-table-wrapper" class="hidden bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty to Prepare</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From # Orders</th>
+                </tr>
+            </thead>
+            <tbody id="items-tbody" class="bg-white divide-y divide-gray-200"></tbody>
+        </table>
+        <div id="items-empty" class="hidden text-center py-12 text-gray-400">No items ordered for this date.</div>
+    </div>
+
+</div><!-- /panel-items -->
 
 <!-- Payment Modal -->
 <div id="payment-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">

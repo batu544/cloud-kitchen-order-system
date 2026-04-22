@@ -8,6 +8,7 @@ let currentPage = 1;
 let currentDate = null;
 let currentStatusFilter = null;
 let totalPages = 1;
+let currentTab = 'orders';
 
 // Initialize dashboard
 async function initDashboard() {
@@ -45,7 +46,11 @@ function setupEventListeners() {
     // Date filter change
     document.getElementById('date-filter').addEventListener('change', (e) => {
         currentDate = e.target.value;
-        loadOrders(1);
+        if (currentTab === 'items') {
+            loadItemSummary();
+        } else {
+            loadOrders(1);
+        }
     });
 
     // Status filter change
@@ -446,6 +451,72 @@ async function submitPayment(event) {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Confirm Payment';
     }
+}
+
+// ── Tab switching ────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+    currentTab = tab;
+
+    document.getElementById('panel-orders').classList.toggle('hidden', tab !== 'orders');
+    document.getElementById('panel-items').classList.toggle('hidden', tab !== 'items');
+
+    ['orders', 'items'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        btn.classList.toggle('border-orange-500', t === tab);
+        btn.classList.toggle('text-orange-600', t === tab);
+        btn.classList.toggle('border-transparent', t !== tab);
+        btn.classList.toggle('text-gray-500', t !== tab);
+        btn.classList.toggle('hover:text-gray-700', t !== tab);
+    });
+
+    if (tab === 'items') loadItemSummary();
+}
+
+// ── Item Count Tab ────────────────────────────────────────────────────────────
+
+async function loadItemSummary() {
+    document.getElementById('items-loading').classList.remove('hidden');
+    document.getElementById('items-table-wrapper').classList.add('hidden');
+
+    try {
+        const resp = await api.request(`/orders/daily-items?date=${currentDate}`);
+        const data = resp.data;
+        document.getElementById('items-total-qty').textContent = data.summary.total_quantity;
+        document.getElementById('items-unique').textContent = data.summary.unique_items;
+        renderItemsTable(data.items);
+    } catch (e) {
+        handleAPIError(e);
+    } finally {
+        document.getElementById('items-loading').classList.add('hidden');
+    }
+}
+
+function renderItemsTable(items) {
+    const tbody = document.getElementById('items-tbody');
+    const empty = document.getElementById('items-empty');
+    const wrapper = document.getElementById('items-table-wrapper');
+
+    wrapper.classList.remove('hidden');
+
+    if (!items.length) {
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+    empty.classList.add('hidden');
+
+    tbody.innerHTML = items.map(item => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${escapeHtml(item.name)}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-xl font-bold text-orange-600">${item.total_quantity}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${item.order_count} order${item.order_count !== 1 ? 's' : ''}
+            </td>
+        </tr>
+    `).join('');
 }
 
 // Initialize on page load

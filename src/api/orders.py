@@ -304,6 +304,29 @@ def get_daily_orders():
         return error_response(message, 400)
 
 
+@orders_bp.route('/daily-items', methods=['GET'])
+@require_auth
+@require_role('staff', 'admin')
+def get_daily_items():
+    """
+    Get aggregated item quantities for a specific date (staff kitchen prep view).
+
+    Headers:
+        Authorization: Bearer <token>
+
+    Query parameters:
+        date: ISO date (YYYY-MM-DD), defaults to today
+
+    Returns:
+        200: items list with total_quantity, order_count per item; summary totals
+        403: Forbidden (not staff)
+    """
+    from datetime import datetime as _dt
+    date = request.args.get('date') or _dt.now().strftime('%Y-%m-%d')
+    result = order_service.get_daily_item_summary(date)
+    return success_response(result)
+
+
 @orders_bp.route('/<int:order_id>/items/<int:order_item_id>', methods=['PUT'])
 @require_auth
 @require_role('staff', 'admin')

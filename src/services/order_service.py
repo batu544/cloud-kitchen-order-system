@@ -731,3 +731,24 @@ class OrderService:
 
         except Exception as e:
             return False, f"Bulk update failed: {str(e)}", None
+
+    def get_daily_item_summary(self, date: str) -> Dict:
+        """
+        Return aggregated item quantities for a specific date.
+
+        Args:
+            date: ISO date string YYYY-MM-DD
+
+        Returns:
+            Dict with date, items list, and summary totals
+        """
+        items = self.order_repo.get_daily_item_summary(date)
+        total_quantity = sum(i['total_quantity'] for i in items)
+        return {
+            'date': date,
+            'items': items,
+            'summary': {
+                'unique_items': len(items),
+                'total_quantity': total_quantity
+            }
+        }

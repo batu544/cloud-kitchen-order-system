@@ -471,7 +471,7 @@ class OrderRepository(BaseRepository):
                     o.notes,
                     c.cust_name,
                     s.status_name as current_status_name,
-                    (SELECT COUNT(*) FROM kitch_order_item WHERE order_id = o.order_id) as item_count,
+                    (SELECT COALESCE(SUM(quantity), 0) FROM kitch_order_item WHERE order_id = o.order_id) as item_count,
                     COUNT(*) OVER() as total_count
                 FROM kitch_order o
                 LEFT JOIN kitch_customer c ON o.cust_id = c.cust_id
@@ -896,3 +896,36 @@ class OrderRepository(BaseRepository):
             SET subtotal = %s, total_amount = %s, updated_at = CURRENT_TIMESTAMP
             WHERE order_id = %s
         """, (subtotal, total_amount, order_id))
+
+    def get_daily_item_summary(self, date: str) -> List[Dict]:
+        """
+        Aggregate item quantities ordered on a specific date (non-cancelled orders only).
+
+        Args:
+            date: ISO date string YYYY-MM-DD
+
+        Returns:
+            List of dicts with kic_id, name, total_quantity, order_count
+            sorted by total_quantity descending.
+        """
+        with get_db_cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    oi.kic_id,
+                    oi.name,
+                    SUM(oi.quantity)::int            AS total_quantity,
+                    COUNT(DISTINCT oi.order_id)::int AS order_count
+                FROM kitch_order_item oi
+                JOIN kitch_order o ON oi.order_id = o.order_id
+                JOIN kitch_status s ON o.current_status_id = s.status_id
+                WHERE DATE_TRUNC('day', o.order_date) = %s::date
+                  AND o.payment_status != 'cancelled'
+                  AND s.status_name != 'Cancelled'
+                GROUP BY oi.kic_id, oi.name
+                ORDER BY total_quantity DESC
+                """,
+                (date,)
+            )
+            rows = cursor.fetchall()
+            return self._rows_to_dicts(cursor, rows)
