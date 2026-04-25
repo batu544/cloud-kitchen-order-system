@@ -47,12 +47,16 @@ def get_applied_migrations(cursor):
     Returns:
         Set of applied version numbers
     """
-    try:
-        cursor.execute("SELECT version FROM schema_migrations ORDER BY version")
-        return {row[0] for row in cursor.fetchall()}
-    except psycopg2.Error:
-        # schema_migrations table doesn't exist yet
+    cursor.execute("""
+        SELECT EXISTS (
+            SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'schema_migrations'
+        )
+    """)
+    if not cursor.fetchone()[0]:
         return set()
+    cursor.execute("SELECT version FROM schema_migrations ORDER BY version")
+    return {row[0] for row in cursor.fetchall()}
 
 
 def apply_migration(cursor, version, filepath, description):
