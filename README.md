@@ -222,4 +222,4 @@ Proprietary
 
 ## Support
 
-For issues and questions, refer to SPEC.md and CLAUDE.md for detailed specifications and implementation guidance.
+For issues and questions, refer to SPEC.md and GEMINI.md for detailed specifications and implementation guidance.

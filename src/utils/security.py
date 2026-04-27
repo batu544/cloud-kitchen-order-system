@@ -1,7 +1,7 @@
 """Security utilities for password hashing and JWT tokens."""
 import bcrypt
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 from config import Config
 
@@ -51,14 +51,14 @@ def generate_jwt_token(user_id: int, username: str, role: str, cust_id: int = No
     Returns:
         JWT token string
     """
-    expiration = datetime.utcnow() + timedelta(hours=Config.JWT_EXPIRATION_HOURS)
+    expiration = datetime.now(timezone.utc) + timedelta(hours=Config.JWT_EXPIRATION_HOURS)
 
     payload = {
         'user_id': user_id,
         'username': username,
         'role': role,
         'exp': expiration,
-        'iat': datetime.utcnow()
+        'iat': datetime.now(timezone.utc)
     }
     if cust_id is not None:
         payload['cust_id'] = cust_id

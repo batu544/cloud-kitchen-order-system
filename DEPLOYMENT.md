@@ -227,5 +227,5 @@ The backend API is now fully functional. You can:
 
 For issues, refer to:
 - SPEC.md - Full specifications
-- CLAUDE.md - Development guidance
+- GEMINI.md - Development guidance
 - README.md - Project overview

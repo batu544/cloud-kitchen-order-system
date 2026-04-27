@@ -1,7 +1,6 @@
 """Database migration runner."""
 import logging
 from pathlib import Path
-import psycopg2
 from src.database.connection import get_db_connection
 
 logger = logging.getLogger(__name__)
