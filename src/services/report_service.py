@@ -1,6 +1,6 @@
 """Report service for analytics and reporting."""
-from datetime import datetime, timedelta
-from typing import Dict
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional
 from src.repositories.report_repository import ReportRepository
 
 
@@ -9,6 +9,23 @@ class ReportService:
 
     def __init__(self):
         self.report_repo = ReportRepository()
+
+    def _parse_date(self, date_str: Optional[str], is_end: bool = False) -> Optional[datetime]:
+        """
+        Parse ISO date string to datetime.
+        If is_end is True and no time is provided, set to end of day.
+        """
+        if not date_str:
+            return None
+            
+        dt = datetime.fromisoformat(date_str)
+        
+        # If string is just YYYY-MM-DD (length 10), it defaults to 00:00:00
+        # For end_date, we want to include the whole day.
+        if is_end and len(date_str) <= 10:
+            dt = dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+            
+        return dt
 
     def get_sales_report(self, start_date: str = None, end_date: str = None,
                         group_by: str = 'day') -> Dict:
@@ -25,14 +42,14 @@ class ReportService:
         """
         # Default to last 30 days if not specified
         if not end_date:
-            end_datetime = datetime.now()
+            end_datetime = datetime.now(timezone.utc)
         else:
-            end_datetime = datetime.fromisoformat(end_date)
+            end_datetime = self._parse_date(end_date, is_end=True)
 
         if not start_date:
             start_datetime = end_datetime - timedelta(days=30)
         else:
-            start_datetime = datetime.fromisoformat(start_date)
+            start_datetime = self._parse_date(start_date)
 
         sales_data = self.report_repo.get_sales_by_period(
             start_datetime, end_datetime, group_by
@@ -63,8 +80,8 @@ class ReportService:
         Returns:
             Top items report
         """
-        start_datetime = datetime.fromisoformat(start_date) if start_date else None
-        end_datetime = datetime.fromisoformat(end_date) if end_date else None
+        start_datetime = self._parse_date(start_date)
+        end_datetime = self._parse_date(end_date, is_end=True)
 
         top_items = self.report_repo.get_top_selling_items(
             start_datetime, end_datetime, limit
@@ -92,8 +109,8 @@ class ReportService:
         Returns:
             Top customers report
         """
-        start_datetime = datetime.fromisoformat(start_date) if start_date else None
-        end_datetime = datetime.fromisoformat(end_date) if end_date else None
+        start_datetime = self._parse_date(start_date)
+        end_datetime = self._parse_date(end_date, is_end=True)
 
         top_customers = self.report_repo.get_top_customers(
             start_datetime, end_datetime, limit
@@ -111,14 +128,14 @@ class ReportService:
     def get_orders_report(self, start_date: str = None, end_date: str = None) -> Dict:
         """Get orders report for a date range."""
         if not end_date:
-            end_datetime = datetime.now()
+            end_datetime = datetime.now(timezone.utc)
         else:
-            end_datetime = datetime.fromisoformat(end_date)
+            end_datetime = self._parse_date(end_date, is_end=True)
 
         if not start_date:
             start_datetime = end_datetime - timedelta(days=30)
         else:
-            start_datetime = datetime.fromisoformat(start_date)
+            start_datetime = self._parse_date(start_date)
 
         orders = self.report_repo.get_orders_report(start_datetime, end_datetime)
 

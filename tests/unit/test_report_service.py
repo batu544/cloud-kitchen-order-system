@@ -41,8 +41,27 @@ class TestReportService(unittest.TestCase):
 
         report = self.service.get_sales_report(start_date=start_date, end_date=end_date)
 
-        self.assertEqual(report['period']['start'], datetime.fromisoformat(start_date).isoformat())
-        self.assertEqual(report['period']['end'], datetime.fromisoformat(end_date).isoformat())
+        # Start date should be 2023-01-01T00:00:00
+        self.assertTrue(report['period']['start'].startswith("2023-01-01T00:00:00"))
+        # End date should be 2023-01-31T23:59:59.999999
+        self.assertTrue(report['period']['end'].startswith("2023-01-31T23:59:59.999999"))
+
+    def test_parse_date_logic(self):
+        # Start date (no is_end)
+        dt = self.service._parse_date("2023-01-01")
+        self.assertEqual(dt.hour, 0)
+        
+        # End date (is_end=True, no time in string)
+        dt = self.service._parse_date("2023-01-01", is_end=True)
+        self.assertEqual(dt.hour, 23)
+        self.assertEqual(dt.minute, 59)
+        self.assertEqual(dt.microsecond, 999999)
+        
+        # End date with time already provided (should NOT override)
+        # Note: len("2023-01-01T12:00:00") > 10
+        dt = self.service._parse_date("2023-01-01T12:00:00", is_end=True)
+        self.assertEqual(dt.hour, 12)
+        self.assertEqual(dt.minute, 0)
 
     def test_get_top_items_report(self):
         self.mock_report_repo.get_top_selling_items.return_value = [{'item': 'Pizza', 'count': 10}]
