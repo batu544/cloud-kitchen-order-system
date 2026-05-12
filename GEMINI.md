@@ -45,3 +45,9 @@ pytest tests/                       # Run all tests
 - `src/repositories/`: SQL queries using `BaseRepository` helpers.
 - `src/utils/`: Common responses, validators, and security helpers.
 - `src/database/`: Connection pooling and migration runner.
+
+### Receipt Management (Expenditure Tracking)
+- `src/api/receipts.py`: AI-powered upload and reporting endpoints.
+- `src/services/receipt_service.py`: Gemini 1.5 Flash Vision integration for data extraction.
+- `src/repositories/receipt_repository.py`: CRUD for `kitch_receipt` and `kitch_receipt_item`.
+- `uploads/receipts/`: Local storage for uploaded receipt images.

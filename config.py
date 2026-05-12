@@ -42,9 +42,13 @@ class Config:
     # Server Configuration
     HOST = os.getenv('HOST', '0.0.0.0')
     PORT = int(os.getenv('PORT', 5000))
+    
+    # Storage Configuration
+    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', os.path.join(os.getcwd(), 'uploads'))
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload size
 
-    # Business Configuration
-    TAX_RATE = Decimal(os.getenv('TAX_RATE', '0.00'))
+    # AI Configuration
+    GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
     @classmethod
     def get_db_connection_string(cls):

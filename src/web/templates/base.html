@@ -64,6 +64,7 @@
                         <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                             <a id="nav-dashboard" href="/staff/dashboard" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">Dashboard</a>
                             <a id="nav-reports" href="/staff/reports" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">Reports</a>
+                            <a id="nav-receipts" href="/admin/receipts" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">Receipt Management</a>
                             <a id="nav-users" href="/admin/users" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">User Management</a>
                             <a id="nav-menu-mgmt" href="/admin/menu" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">Menu Management</a>
                             <a id="nav-my-orders" href="/my-orders" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">My Orders</a>
@@ -110,6 +111,7 @@
                 // Show staff/admin links
                 if (user.role === 'staff' || user.role === 'admin') {
                     document.getElementById('nav-dashboard').classList.remove('hidden');
+                    document.getElementById('nav-receipts').classList.remove('hidden');
                 }
                 if (user.role === 'admin') {
                     document.getElementById('nav-reports').classList.remove('hidden');

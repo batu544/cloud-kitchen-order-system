@@ -11,9 +11,14 @@ class APIClient {
 
     async request(endpoint, options = {}) {
         const headers = {
-            'Content-Type': 'application/json',
             ...options.headers
         };
+
+        // Don't set Content-Type if we're sending FormData
+        // (the browser will set it with the correct boundary)
+        if (!(options.body instanceof FormData)) {
+            headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+        }
 
         if (this.token) {
             headers['Authorization'] = `Bearer ${this.token}`;

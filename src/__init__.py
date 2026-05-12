@@ -17,6 +17,7 @@ from src.api.orders import orders_bp  # noqa: E402
 from src.api.payments import payments_bp  # noqa: E402
 from src.api.reports import reports_bp  # noqa: E402
 from src.api.admin import admin_bp  # noqa: E402
+from src.api.receipts import receipts_bp  # noqa: E402
 from src.api.web_routes import web_bp  # noqa: E402
 
 
@@ -99,6 +100,7 @@ def create_app(config_class=Config):
     app.register_blueprint(payments_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(receipts_bp)
 
     # Register web UI blueprint
     app.register_blueprint(web_bp)

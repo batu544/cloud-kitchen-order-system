@@ -92,3 +92,9 @@ def admin_users():
 def admin_menu():
     """Admin menu management page."""
     return render_template('admin_menu.html')
+
+
+@web_bp.route('/admin/receipts')
+def admin_receipts():
+    """Admin receipt management page."""
+    return render_template('admin_receipts.html')
