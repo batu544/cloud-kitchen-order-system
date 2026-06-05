@@ -14,7 +14,8 @@ class AuthService:
         self.customer_repo = CustomerRepository()
 
     def register_user(self, username: str, password: str, phone: str,
-                     cust_name: str, email: str = None, address: str = None) -> Tuple[bool, str, Optional[Dict]]:
+                     cust_name: str, email: str = None, address: str = None,
+                     requires_password_change: bool = False) -> Tuple[bool, str, Optional[Dict]]:
         """
         Register a new user account.
 
@@ -25,6 +26,7 @@ class AuthService:
             cust_name: Customer name
             email: Optional email (if different from username)
             address: Optional address
+            requires_password_change: Whether the user must change password on first login
 
         Returns:
             Tuple of (success, message, user_data_with_token)
@@ -85,7 +87,8 @@ class AuthService:
                 username=username,
                 password_hash=password_hash,
                 role='customer',
-                cust_id=cust_id
+                cust_id=cust_id,
+                requires_password_change=requires_password_change
             )
 
             if not user_id:
@@ -99,7 +102,8 @@ class AuthService:
                 'username': username,
                 'role': 'customer',
                 'cust_id': cust_id,
-                'token': token
+                'token': token,
+                'requires_password_change': requires_password_change
             }
 
             return True, "Registration successful", user_data
@@ -138,7 +142,8 @@ class AuthService:
             user['user_id'],
             user['username'],
             user['role'],
-            cust_id=user.get('cust_id')
+            cust_id=user.get('cust_id'),
+            requires_password_change=user.get('requires_password_change', False)
         )
 
         user_data = {
@@ -146,7 +151,8 @@ class AuthService:
             'username': user['username'],
             'role': user['role'],
             'cust_id': user.get('cust_id'),
-            'token': token
+            'token': token,
+            'requires_password_change': user.get('requires_password_change', False)
         }
 
         return True, "Login successful", user_data

@@ -129,6 +129,13 @@ Access the application from any device on your Wi-Fi network using:
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - Login and get JWT token
 - `GET /api/auth/me` - Get current user info (protected)
+- `POST /api/auth/change-password` - Change user password (protected)
+
+### Admin User Management
+- `GET /api/admin/users` - List all users (admin only)
+- `POST /api/admin/users` - Create new user with default password (admin only)
+- `PUT /api/admin/users/:id` - Update user role or status (admin only)
+- `DELETE /api/admin/users/:id` - Delete user (admin only)
 
 ### Menu
 - `GET /api/menu` - Get menu with categories and items
@@ -169,6 +176,12 @@ Per SPEC.md lines 119-123:
 ### Order Total Calculation
 
 `subtotal → discount → tip → total_amount` (no tax)
+
+### Password Security Flow
+
+- **Admin Creation**: Users created by an admin are assigned a default password (`Password123!`). The Email field is optional. The **Phone Number** is always used as the login username.
+- **Forced Reset**: Upon first login, users with the `requires_password_change` flag are redirected to a mandatory password reset page.
+- **Session Security**: The password reset requirement is encoded into the JWT and verified on the frontend.
 
 ### Phone-Based Customer Linking
 
@@ -223,3 +236,4 @@ Proprietary
 ## Support
 
 For issues and questions, refer to SPEC.md and GEMINI.md for detailed specifications and implementation guidance.
+ guidance.

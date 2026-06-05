@@ -30,6 +30,47 @@ def list_users():
     return success_response(users)
 
 
+@admin_bp.route('/users', methods=['POST'])
+@require_auth
+def create_user():
+    err = _require_admin()
+    if err:
+        return err
+    data = request.get_json() or {}
+
+    # Required fields
+    cust_name = data.get('cust_name')
+    cust_phone_number = data.get('cust_phone_number')
+    
+    # Username is ALWAYS the phone number
+    username = cust_phone_number
+    # Optional fields
+    email = data.get('email')
+
+    if not all([cust_name, cust_phone_number]):
+        return error_response("Missing required fields: cust_name, cust_phone_number", 400)
+
+    from src.services.auth_service import AuthService
+    auth_service = AuthService()
+
+    # Use a default password that the user must change on first login
+    DEFAULT_PASSWORD = "Password123!"
+
+    success, message, user_data = auth_service.register_user(
+        username=username,
+        password=DEFAULT_PASSWORD,
+        phone=cust_phone_number,
+        cust_name=cust_name,
+        email=email,
+        requires_password_change=True
+    )
+
+    if not success:
+        return error_response(message, 400)
+
+    return success_response(user_data, "User created successfully with default password", 201)
+
+
 @admin_bp.route('/users/<int:user_id>', methods=['PUT'])
 @require_auth
 def update_user(user_id):

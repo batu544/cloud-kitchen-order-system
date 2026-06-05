@@ -38,7 +38,8 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
-def generate_jwt_token(user_id: int, username: str, role: str, cust_id: int = None) -> str:
+def generate_jwt_token(user_id: int, username: str, role: str, cust_id: int = None,
+                      requires_password_change: bool = False) -> str:
     """
     Generate a JWT token for a user.
 
@@ -47,6 +48,7 @@ def generate_jwt_token(user_id: int, username: str, role: str, cust_id: int = No
         username: User's username
         role: User's role (customer, staff, admin)
         cust_id: Optional linked customer ID
+        requires_password_change: Whether the user must change password
 
     Returns:
         JWT token string
@@ -57,6 +59,7 @@ def generate_jwt_token(user_id: int, username: str, role: str, cust_id: int = No
         'user_id': user_id,
         'username': username,
         'role': role,
+        'requires_password_change': requires_password_change,
         'exp': expiration,
         'iat': datetime.now(timezone.utc)
     }

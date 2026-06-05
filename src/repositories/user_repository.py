@@ -56,7 +56,7 @@ class UserRepository(BaseRepository):
         return self.find_by_field('cust_id', cust_id)
 
     def create_user(self, username: str, password_hash: str, role: str = 'customer',
-                    cust_id: int = None) -> Optional[int]:
+                    cust_id: int = None, requires_password_change: bool = False) -> Optional[int]:
         """
         Create a new user.
 
@@ -65,6 +65,7 @@ class UserRepository(BaseRepository):
             password_hash: Hashed password
             role: User role (customer, staff, admin)
             cust_id: Optional customer ID to link
+            requires_password_change: Whether the user must change their password on first login
 
         Returns:
             New user ID or None if creation failed
@@ -74,13 +75,14 @@ class UserRepository(BaseRepository):
             'password_hash': password_hash,
             'role': role,
             'cust_id': cust_id,
-            'is_active': True
+            'is_active': True,
+            'requires_password_change': requires_password_change
         }
         return self.insert(data)
 
     def update_password(self, user_id: int, new_password_hash: str) -> bool:
         """
-        Update user password.
+        Update user password and clear requires_password_change flag.
 
         Args:
             user_id: User ID
@@ -91,6 +93,7 @@ class UserRepository(BaseRepository):
         """
         return self.update(user_id, {
             'password_hash': new_password_hash,
+            'requires_password_change': False,
             'updated_at': datetime.now()
         })
 

@@ -98,3 +98,9 @@ def admin_menu():
 def admin_receipts():
     """Admin receipt management page."""
     return render_template('admin_receipts.html')
+
+
+@web_bp.route('/force-password-change')
+def force_password_change():
+    """Page to force users to change their password on first login."""
+    return render_template('force_password_change.html')

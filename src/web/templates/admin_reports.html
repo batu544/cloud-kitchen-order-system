@@ -202,6 +202,41 @@
             <div id="pending-table-wrap" class="hidden overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50">
+                        <!-- Column filter row -->
+                        <tr class="border-b">
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterPending()" id="p-order-id" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterPending()" id="p-date" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterPending()" id="p-customer" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterPending()" id="p-phone" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterPending()" id="p-status" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterPending()" id="p-total" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterPending()" id="p-paid" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                            <th class="px-4 py-2">
+                                <input type="text" oninput="filterPending()" id="p-balance" placeholder="Filter…"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-normal focus:ring-1 focus:ring-orange-400 focus:border-transparent">
+                            </th>
+                        </tr>
                         <tr class="border-b text-left text-gray-600">
                             <th class="px-4 py-3 font-semibold">Order ID</th>
                             <th class="px-4 py-3 font-semibold">Date</th>
@@ -239,6 +274,7 @@ let allOrderRows = [];   // full dataset for client-side filtering
 let ordersLoaded = false;
 
 let pendingLoaded = false;
+let allPendingRows = [];
 
 // Auth guard
 const user = api.getCurrentUser();
@@ -613,19 +649,19 @@ async function loadPendingPayments() {
 
     try {
         const response = await api.request('/reports/pending-payments');
-        const orders = response.data.orders || [];
+        allPendingRows = response.data.orders || [];
         pendingLoaded = true;
 
         // Update badge
         const badge = document.getElementById('pending-badge');
-        if (orders.length > 0) {
-            badge.textContent = orders.length;
+        if (allPendingRows.length > 0) {
+            badge.textContent = allPendingRows.length;
             badge.classList.remove('hidden');
         } else {
             badge.classList.add('hidden');
         }
 
-        renderPendingTable(orders);
+        renderPendingTable(allPendingRows);
     } catch (error) {
         handleAPIError(error);
         document.getElementById('pending-loading').classList.add('hidden');
@@ -637,6 +673,8 @@ function renderPendingTable(orders) {
 
     if (!orders || orders.length === 0) {
         document.getElementById('pending-empty').classList.remove('hidden');
+        // Clear tbody if no results after filter
+        document.getElementById('pending-tbody').innerHTML = '';
         return;
     }
 
@@ -646,6 +684,7 @@ function renderPendingTable(orders) {
         const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const timeStr = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         const balance = o.total_amount - o.total_paid;
+        const statusText = o.payment_status === 'partially_paid' ? 'Partial' : 'Pending';
         const statusLabel = o.payment_status === 'partially_paid'
             ? '<span class="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">Partial</span>'
             : '<span class="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-600 rounded-full">Pending</span>';
@@ -654,7 +693,7 @@ function renderPendingTable(orders) {
             <td class="px-4 py-3 text-gray-700 whitespace-nowrap">${dateStr}<br><span class="text-xs text-gray-400">${timeStr}</span></td>
             <td class="px-4 py-3 text-gray-900">${escapeHtml(o.customer_name)}</td>
             <td class="px-4 py-3 text-gray-600 font-mono">${escapeHtml(o.phone)}</td>
-            <td class="px-4 py-3">${statusLabel}</td>
+            <td class="px-4 py-3" data-status="${statusText}">${statusLabel}</td>
             <td class="px-4 py-3 text-right font-semibold text-gray-900">${formatCurrency(o.total_amount)}</td>
             <td class="px-4 py-3 text-right text-gray-600">${formatCurrency(o.total_paid)}</td>
             <td class="px-4 py-3 text-right font-bold text-red-600">${formatCurrency(balance)}</td>
@@ -662,6 +701,38 @@ function renderPendingTable(orders) {
     }).join('');
 
     document.getElementById('pending-table-wrap').classList.remove('hidden');
+    document.getElementById('pending-empty').classList.add('hidden');
+}
+
+function filterPending() {
+    const fId       = document.getElementById('p-order-id').value.toLowerCase();
+    const fDate     = document.getElementById('p-date').value.toLowerCase();
+    const fCustomer = document.getElementById('p-customer').value.toLowerCase();
+    const fPhone    = document.getElementById('p-phone').value.toLowerCase();
+    const fStatus   = document.getElementById('p-status').value.toLowerCase();
+    const fTotal    = document.getElementById('p-total').value.toLowerCase();
+    const fPaid     = document.getElementById('p-paid').value.toLowerCase();
+    const fBalance  = document.getElementById('p-balance').value.toLowerCase();
+
+    const filtered = allPendingRows.filter(o => {
+        const dt = new Date(o.order_date);
+        const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toLowerCase();
+        const balance = o.total_amount - o.total_paid;
+        const statusText = (o.payment_status === 'partially_paid' ? 'Partial' : 'Pending').toLowerCase();
+        
+        return (
+            String(o.order_id).includes(fId) &&
+            dateStr.includes(fDate) &&
+            o.customer_name.toLowerCase().includes(fCustomer) &&
+            o.phone.toLowerCase().includes(fPhone) &&
+            statusText.includes(fStatus) &&
+            formatCurrency(o.total_amount).toLowerCase().includes(fTotal) &&
+            formatCurrency(o.total_paid).toLowerCase().includes(fPaid) &&
+            formatCurrency(balance).toLowerCase().includes(fBalance)
+        );
+    });
+
+    renderPendingTable(filtered);
 }
 
 

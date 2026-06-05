@@ -47,6 +47,10 @@
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
         </select>
+        <button onclick="openAddModal()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Add User
+        </button>
     </div>
 
     <!-- Loading -->
@@ -106,6 +110,36 @@
         </div>
     </div>
 </div>
+
+<!-- Add Modal -->
+<div id="add-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New User</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input type="text" id="add-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500" placeholder="John Doe">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input type="text" id="add-phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500" placeholder="10-digit number">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                <input type="email" id="add-email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500" placeholder="john@example.com">
+            </div>
+            <p class="text-xs text-gray-500">
+                <b>Note:</b> New users are created with the <b>Customer</b> role by default. 
+                The <b>Phone Number</b> will be used as the login username.
+                A default password <b>Password123!</b> will be set, which they must change on first login.
+            </p>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button onclick="saveAdd()" class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium">Create User</button>
+            <button onclick="closeAddModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium">Cancel</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -127,6 +161,40 @@ async function loadUsers() {
         renderTable(allUsers);
         document.getElementById('loading-state').classList.add('hidden');
         document.getElementById('table-wrapper').classList.remove('hidden');
+    } catch (e) {
+        handleAPIError(e);
+    }
+}
+
+function openAddModal() {
+    document.getElementById('add-name').value = '';
+    document.getElementById('add-phone').value = '';
+    document.getElementById('add-email').value = '';
+    document.getElementById('add-modal').classList.remove('hidden');
+}
+
+function closeAddModal() {
+    document.getElementById('add-modal').classList.add('hidden');
+}
+
+async function saveAdd() {
+    const cust_name = document.getElementById('add-name').value;
+    const cust_phone_number = document.getElementById('add-phone').value;
+    const email = document.getElementById('add-email').value;
+
+    if (!cust_name || !cust_phone_number) {
+        showToast('Name and Phone are required', 'error');
+        return;
+    }
+
+    try {
+        await api.request('/admin/users', {
+            method: 'POST',
+            body: JSON.stringify({ cust_name, cust_phone_number, email })
+        });
+        showToast('User created successfully', 'success');
+        closeAddModal();
+        await loadUsers();
     } catch (e) {
         handleAPIError(e);
     }

@@ -134,6 +134,14 @@ async function handleLogin(event) {
 
         // Redirect after short delay
         setTimeout(() => {
+            const user = api.getCurrentUser();
+            
+            // Check if password change is required
+            if (user && user.requires_password_change) {
+                window.location.href = '/force-password-change';
+                return;
+            }
+
             // Check if there's a redirect URL
             const urlParams = new URLSearchParams(window.location.search);
             const redirect = urlParams.get('redirect');
@@ -173,6 +181,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const user = api.getCurrentUser();
 
     if (user) {
+        if (user.requires_password_change) {
+            window.location.href = '/force-password-change';
+            return;
+        }
+        
         // Already logged in, redirect
         const urlParams = new URLSearchParams(window.location.search);
         const redirect = urlParams.get('redirect');
