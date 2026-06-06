@@ -34,7 +34,8 @@ def calculate_catering_price(base_price: Decimal, size: str) -> Decimal:
     multiplier, discount_factor = multipliers[size]
     catering_price = base_price * multiplier * discount_factor
 
-    return catering_price.quantize(Decimal('0.01'))
+    # Round to nearest whole number per user requirement
+    return catering_price.quantize(Decimal('0'))
 
 
 def apply_discount(subtotal: Decimal, discount_type: str, discount_value: Decimal) -> Decimal:

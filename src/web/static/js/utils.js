@@ -97,7 +97,7 @@ function getCateringPrice(basePrice, size) {
         large: { multiplier: 11, discount: 0.91 }
     };
     const f = formulas[size];
-    return basePrice * f.multiplier * f.discount;
+    return Math.round(basePrice * f.multiplier * f.discount);
 }
 
 // Update cart badge

@@ -15,17 +15,17 @@ class TestCalculateCateringPrice(unittest.TestCase):
     def test_small_tray(self):
         price = Decimal('10.00')
         result = calculate_catering_price(price, 'small')
-        self.assertEqual(result, Decimal('38.40'))  # 10 * 4 * 0.96
+        self.assertEqual(result, Decimal('38'))  # 10 * 4 * 0.96 = 38.4 -> 38
 
     def test_medium_tray(self):
         price = Decimal('10.00')
         result = calculate_catering_price(price, 'medium')
-        self.assertEqual(result, Decimal('57.60'))  # 10 * 6 * 0.96
+        self.assertEqual(result, Decimal('58'))  # 10 * 6 * 0.96 = 57.6 -> 58
 
     def test_large_tray(self):
         price = Decimal('10.00')
         result = calculate_catering_price(price, 'large')
-        self.assertEqual(result, Decimal('100.10'))  # 10 * 11 * 0.91
+        self.assertEqual(result, Decimal('100'))  # 10 * 11 * 0.91 = 100.1 -> 100
 
     def test_invalid_size_raises(self):
         with self.assertRaises(ValueError):
@@ -38,10 +38,10 @@ class TestCalculateCateringPrice(unittest.TestCase):
     def test_decimal_precision(self):
         price = Decimal('7.33')
         result = calculate_catering_price(price, 'small')
-        # 7.33 * 4 * 0.96 = 28.1472 → rounded to 28.15
-        self.assertEqual(result, Decimal('28.15'))
-        # Result must have exactly 2 decimal places
-        self.assertEqual(result, result.quantize(Decimal('0.01')))
+        # 7.33 * 4 * 0.96 = 28.1472 → rounded to 28
+        self.assertEqual(result, Decimal('28'))
+        # Result must have 0 decimal places
+        self.assertEqual(result, result.quantize(Decimal('0')))
 
     def test_zero_base_price(self):
         result = calculate_catering_price(Decimal('0.00'), 'large')
@@ -172,7 +172,7 @@ class TestCalculateLineTotal(unittest.TestCase):
             is_catering=True,
             catering_size='small'
         )
-        self.assertEqual(result, Decimal('38.40'))  # 10 * 4 * 0.96
+        self.assertEqual(result, Decimal('38'))  # 10 * 4 * 0.96 = 38.4 -> 38
 
     def test_catering_medium_quantity_two(self):
         result = calculate_line_total(
@@ -181,7 +181,7 @@ class TestCalculateLineTotal(unittest.TestCase):
             is_catering=True,
             catering_size='medium'
         )
-        self.assertEqual(result, Decimal('115.20'))  # (10 * 6 * 0.96) * 2
+        self.assertEqual(result, Decimal('116'))  # (10 * 6 * 0.96 = 57.6 -> 58) * 2 = 116
 
     def test_catering_large(self):
         result = calculate_line_total(
@@ -190,7 +190,7 @@ class TestCalculateLineTotal(unittest.TestCase):
             is_catering=True,
             catering_size='large'
         )
-        self.assertEqual(result, Decimal('100.10'))  # 10 * 11 * 0.91
+        self.assertEqual(result, Decimal('100'))  # 10 * 11 * 0.91 = 100.1 -> 100
 
     def test_non_catering_ignores_catering_size(self):
         result = calculate_line_total(
