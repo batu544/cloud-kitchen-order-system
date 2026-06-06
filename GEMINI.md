@@ -35,7 +35,7 @@ pytest tests/                       # Run all tests
 ```
 
 ### Business Logic Highlights
-- **Pricing:** Catering sizes (Small/Medium/Large) apply a 10% discount on the per-plate price.
+- **Pricing:** Catering sizes (Small/Medium/Large) apply tiered discounts (4-9%) on the per-plate price.
 - **Discounts:** Staff-only. Types: `percent` (0-100) or `fixed`.
 - **Validation:** Phone numbers must be exactly 10 digits.
 

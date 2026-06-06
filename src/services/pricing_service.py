@@ -8,9 +8,9 @@ def calculate_catering_price(base_price: Decimal, size: str) -> Decimal:
     Calculate catering tray price based on size (SPEC.md lines 130-147).
 
     Formulas:
-    - small: base_price * 4 * 0.9
-    - medium: base_price * 6 * 0.9
-    - large: base_price * 12 * 0.9
+    - small: base_price * 4 * 0.96
+    - medium: base_price * 6 * 0.96
+    - large: base_price * 11 * 0.91
 
     Args:
         base_price: Base plate price from menu
@@ -23,16 +23,16 @@ def calculate_catering_price(base_price: Decimal, size: str) -> Decimal:
         ValueError: If size is invalid
     """
     multipliers = {
-        'small': 4,
-        'medium': 6,
-        'large': 12
+        'small': (4, Decimal('0.96')),
+        'medium': (6, Decimal('0.96')),
+        'large': (11, Decimal('0.91'))
     }
 
     if size not in multipliers:
         raise ValueError(f"Invalid catering size: {size}. Must be 'small', 'medium', or 'large'")
 
-    multiplier = multipliers[size]
-    catering_price = base_price * multiplier * Decimal('0.9')
+    multiplier, discount_factor = multipliers[size]
+    catering_price = base_price * multiplier * discount_factor
 
     return catering_price.quantize(Decimal('0.01'))
 

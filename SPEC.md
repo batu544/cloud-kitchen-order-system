@@ -29,9 +29,9 @@ A Python/Flask REST API + PostgreSQL + Tailwind CSS web UI for managing a local 
 - **Discounts**: order-level only; staff/admin can apply. Either percent (0–100) or fixed amount.
 - **Tax**: always 0.00 (no tax applied).
 - **Catering pricing** (from `kic_price`):
-  - small  = plate_price × 4 × 0.9
-  - medium = plate_price × 6 × 0.9
-  - large  = plate_price × 12 × 0.9
+  - small  = plate_price × 4 × 0.96
+  - medium = plate_price × 6 × 0.96
+  - large  = plate_price × 11 × 0.91
 - **Password**: minimum 8 characters (validated server-side before any other check).
 - **Phone**: exactly 10 digits; enforced as CHECK constraint and in application validators.
 

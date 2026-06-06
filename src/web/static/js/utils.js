@@ -91,8 +91,13 @@ function handleAPIError(error) {
 
 // Get catering price
 function getCateringPrice(basePrice, size) {
-    const multipliers = { small: 4, medium: 6, large: 12 };
-    return basePrice * multipliers[size] * 0.9;
+    const formulas = {
+        small: { multiplier: 4, discount: 0.96 },
+        medium: { multiplier: 6, discount: 0.96 },
+        large: { multiplier: 11, discount: 0.91 }
+    };
+    const f = formulas[size];
+    return basePrice * f.multiplier * f.discount;
 }
 
 // Update cart badge
