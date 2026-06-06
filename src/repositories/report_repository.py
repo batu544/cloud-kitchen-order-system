@@ -32,14 +32,15 @@ class ReportRepository:
             cursor.execute(
                 """
                 SELECT
-                    DATE_TRUNC(%s, order_date) as period,
-                    SUM(total_amount) as total_sales,
+                    DATE_TRUNC(%s, o.order_date) as period,
+                    SUM(o.total_amount) as total_sales,
                     COUNT(*) as orders_count,
-                    AVG(total_amount) as avg_order_value
-                FROM kitch_order
-                WHERE order_date BETWEEN %s AND %s
-                    AND payment_status != 'cancelled'
-                GROUP BY DATE_TRUNC(%s, order_date)
+                    AVG(o.total_amount) as avg_order_value
+                FROM kitch_order o
+                JOIN kitch_status s ON o.current_status_id = s.status_id
+                WHERE o.order_date BETWEEN %s AND %s
+                    AND s.status_name != 'Cancelled'
+                GROUP BY DATE_TRUNC(%s, o.order_date)
                 ORDER BY period
                 """,
                 (trunc, start_date, end_date, trunc)
@@ -77,7 +78,8 @@ class ReportRepository:
                 COUNT(DISTINCT oi.order_id) as orders_count
             FROM kitch_order_item oi
             JOIN kitch_order o ON oi.order_id = o.order_id
-            WHERE o.payment_status != 'cancelled'
+            JOIN kitch_status s ON o.current_status_id = s.status_id
+            WHERE s.status_name != 'Cancelled'
         """
         params = []
 
@@ -132,7 +134,8 @@ class ReportRepository:
                 AVG(o.total_amount) as avg_order_value
             FROM kitch_order o
             JOIN kitch_customer c ON o.cust_id = c.cust_id
-            WHERE o.payment_status != 'cancelled'
+            JOIN kitch_status s ON o.current_status_id = s.status_id
+            WHERE s.status_name != 'Cancelled'
         """
         params = []
 
@@ -252,12 +255,13 @@ class ReportRepository:
         query = """
             SELECT
                 COUNT(*) as total_orders,
-                SUM(total_amount) as total_sales,
-                AVG(total_amount) as avg_order_value,
-                SUM(tip_amount) as total_tips,
-                SUM(discount_amount) as total_discounts
-            FROM kitch_order
-            WHERE payment_status != 'cancelled'
+                SUM(o.total_amount) as total_sales,
+                AVG(o.total_amount) as avg_order_value,
+                SUM(o.tip_amount) as total_tips,
+                SUM(o.discount_amount) as total_discounts
+            FROM kitch_order o
+            JOIN kitch_status s ON o.current_status_id = s.status_id
+            WHERE s.status_name != 'Cancelled'
         """
         params = []
 

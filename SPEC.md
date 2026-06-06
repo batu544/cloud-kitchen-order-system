@@ -248,14 +248,15 @@ When a payment with `payment_status = 'paid'` is recorded on an order whose `cur
 
 ### Sales by period
 ```sql
-SELECT DATE_TRUNC(%s, order_date) AS period,
-       SUM(total_amount) AS total_sales,
+SELECT DATE_TRUNC(%s, o.order_date) AS period,
+       SUM(o.total_amount) AS total_sales,
        COUNT(*) AS orders_count,
-       AVG(total_amount) AS avg_order_value
-FROM kitch_order
-WHERE order_date BETWEEN %s AND %s
-  AND payment_status != 'cancelled'
-GROUP BY DATE_TRUNC(%s, order_date)
+       AVG(o.total_amount) AS avg_order_value
+FROM kitch_order o
+JOIN kitch_status s ON o.current_status_id = s.status_id
+WHERE o.order_date BETWEEN %s AND %s
+  AND s.status_name != 'Cancelled'
+GROUP BY DATE_TRUNC(%s, o.order_date)
 ORDER BY period;
 ```
 
