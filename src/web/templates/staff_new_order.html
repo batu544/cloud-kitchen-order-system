@@ -298,7 +298,8 @@ function renderMenuList(items) {
 
 function updateCateringPreview(kicId, basePrice) {
     const size = document.getElementById(`cat-size-${kicId}`)?.value || 'small';
-    const price = basePrice * (CATERING_MULTIPLIERS[size] || 1);
+    const multiplier = CATERING_MULTIPLIERS[size] || 1;
+    const price = Math.round(basePrice * multiplier);
     const el = document.getElementById(`catering-price-${kicId}`);
     if (el) el.textContent = formatCurrency(price);
 }
@@ -390,7 +391,7 @@ function renderOrderItems() {
         <div class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg">
             <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-gray-900">${escapeHtml(item.name)}</p>
-                ${item.is_catering ? `<span class="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded">Party · ${item.catering_size}</span>` : ''}
+                ${item.is_catering && item.catering_size !== 'single' ? `<span class="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded">Party · ${item.catering_size}</span>` : ''}
                 ${item.special_instructions ? `<p class="text-xs text-gray-400 mt-1 italic">${escapeHtml(item.special_instructions)}</p>` : ''}
                 <button onclick="openInstrModal(${idx})" class="text-xs text-orange-500 hover:text-orange-700 mt-1">
                     ${item.special_instructions ? 'Edit note' : '+ Add note'}
@@ -412,11 +413,12 @@ function renderOrderItems() {
 }
 
 // ── Pricing ──
-const CATERING_MULTIPLIERS = { single: 1, small: 4 * 0.9, medium: 6 * 0.9, large: 12 * 0.9 };
+const CATERING_MULTIPLIERS = { single: 1, small: 4 * 0.96, medium: 6 * 0.96, large: 11 * 0.91 };
 
 function computeLineTotal(item) {
-    if (item.is_catering && item.catering_size) {
-        return item.price * (CATERING_MULTIPLIERS[item.catering_size] || 1) * item.qty;
+    if (item.is_catering && item.catering_size && item.catering_size !== 'single') {
+        const unitPriceRounded = Math.round(item.price * (CATERING_MULTIPLIERS[item.catering_size] || 1));
+        return unitPriceRounded * item.qty;
     }
     return item.price * item.qty;
 }
