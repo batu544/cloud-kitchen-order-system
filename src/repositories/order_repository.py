@@ -899,7 +899,7 @@ class OrderRepository(BaseRepository):
 
     def get_daily_item_summary(self, date: str) -> List[Dict]:
         """
-        Aggregate item quantities ordered on a specific date (non-cancelled orders only).
+        Aggregate item quantities ordered on a specific date (non-cancelled/non-refunded orders only).
 
         Args:
             date: ISO date string YYYY-MM-DD
@@ -920,8 +920,8 @@ class OrderRepository(BaseRepository):
                 JOIN kitch_order o ON oi.order_id = o.order_id
                 JOIN kitch_status s ON o.current_status_id = s.status_id
                 WHERE DATE_TRUNC('day', o.order_date) = %s::date
-                  AND o.payment_status != 'cancelled'
-                  AND s.status_name != 'Cancelled'
+                  AND LOWER(o.payment_status) NOT IN ('cancelled', 'refunded')
+                  AND LOWER(s.status_name) != 'cancelled'
                 GROUP BY oi.kic_id, oi.name
                 ORDER BY total_quantity DESC
                 """,
