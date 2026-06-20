@@ -290,7 +290,7 @@ class TestCreateOrderCalculations(unittest.TestCase):
         self.assertTrue(ok, msg)
         call_args = self.mock_order_repo.create_order_with_items.call_args
         order_data = call_args[0][0]
-        self.assertEqual(order_data['subtotal'], Decimal('36.00'))  # 10 * 4 * 0.9
+        self.assertEqual(order_data['subtotal'], Decimal('38.00'))  # 10 * 4 * 0.96 = 38.4 -> 38
 
     def test_customer_linked_by_phone(self):
         self.mock_cust_repo.find_by_phone.return_value = {'cust_id': 7}

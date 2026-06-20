@@ -3,7 +3,7 @@ import sys
 import json
 from playwright.sync_api import sync_playwright
 
-BASE_URL = "http://localhost:5001"
+BASE_URL = "http://localhost:5002"
 ADMIN_EMAIL = "admin@kitchen.com"
 ADMIN_PASS = "password123"
 
@@ -36,7 +36,7 @@ def api_call(page, method, path, body=None):
 
 def run_tests():
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, slow_mo=200)
+        browser = p.chromium.launch(headless=True)
         context = browser.new_context()
         page = context.new_page()
 

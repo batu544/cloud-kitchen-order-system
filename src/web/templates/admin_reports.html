@@ -598,18 +598,29 @@ function renderOrdersTable(orders) {
         const dt = new Date(o.order_date);
         const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const timeStr = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const isCancelled = o.payment_status === 'cancelled' || o.order_status === 'Cancelled';
         const unpaid = o.total_amount - o.total_paid;
-        const paidClass = unpaid <= 0 ? 'text-green-600' : 'text-red-500';
-        return `<tr class="border-b hover:bg-gray-50">
+        let paidCell;
+        if (isCancelled) {
+            paidCell = `<span class="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">Cancelled</span>`;
+        } else {
+            const paidClass = unpaid <= 0 ? 'text-green-600' : 'text-red-500';
+            paidCell = `<span class="font-semibold ${paidClass}">${formatCurrency(o.total_paid)}</span>`;
+        }
+        const totalCell = isCancelled
+            ? `<span class="line-through text-gray-400">${formatCurrency(o.total_amount)}</span>`
+            : `<span class="font-semibold text-gray-900">${formatCurrency(o.total_amount)}</span>`;
+        return `<tr class="border-b hover:bg-gray-50 ${isCancelled ? 'opacity-60' : ''}">
             <td class="px-4 py-3 font-mono text-gray-700">#${o.order_id}</td>
             <td class="px-4 py-3 text-gray-700 whitespace-nowrap">${dateStr}<br><span class="text-xs text-gray-400">${timeStr}</span></td>
             <td class="px-4 py-3 text-gray-900">${escapeHtml(o.customer_name)}</td>
             <td class="px-4 py-3 text-gray-600 font-mono">${escapeHtml(o.phone)}</td>
             <td class="px-4 py-3 text-right text-gray-700">${o.item_count}</td>
-            <td class="px-4 py-3 text-right font-semibold text-gray-900">${formatCurrency(o.total_amount)}</td>
-            <td class="px-4 py-3 text-right font-semibold ${paidClass}">${formatCurrency(o.total_paid)}</td>
+            <td class="px-4 py-3 text-right">${totalCell}</td>
+            <td class="px-4 py-3 text-right">${paidCell}</td>
         </tr>`;
     }).join('');
+
 
     document.getElementById('orders-table-wrap').classList.remove('hidden');
     document.getElementById('orders-count-badge').textContent = `${orders.length} order${orders.length !== 1 ? 's' : ''}`;

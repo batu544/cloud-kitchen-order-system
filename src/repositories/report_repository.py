@@ -178,15 +178,29 @@ class ReportRepository:
                     o.order_date,
                     COALESCE(c.cust_name, o.order_phone, 'Guest') AS customer_name,
                     COALESCE(c.cust_phone_number, o.order_phone, '') AS phone,
-                    COUNT(DISTINCT oi.order_item_id) AS item_count,
+                    COALESCE(oi.item_count, 0) AS item_count,
                     o.total_amount,
-                    COALESCE(SUM(p.amount), 0) AS total_paid
+                    CASE
+                        WHEN o.payment_status IN ('cancelled', 'refunded') OR s.status_name = 'Cancelled' THEN 0
+                        ELSE COALESCE(p.total_paid, 0)
+                    END AS total_paid,
+                    o.payment_status,
+                    s.status_name AS order_status
                 FROM kitch_order o
                 LEFT JOIN kitch_customer c ON o.cust_id = c.cust_id
-                LEFT JOIN kitch_order_item oi ON oi.order_id = o.order_id
-                LEFT JOIN kitch_payment p ON p.order_id = o.order_id
+                LEFT JOIN kitch_status s ON o.current_status_id = s.status_id
+                LEFT JOIN (
+                    SELECT order_id, COUNT(*) AS item_count
+                    FROM kitch_order_item
+                    GROUP BY order_id
+                ) oi ON oi.order_id = o.order_id
+                LEFT JOIN (
+                    SELECT order_id, SUM(amount) AS total_paid
+                    FROM kitch_payment
+                    WHERE payment_status NOT IN ('cancelled', 'refunded')
+                    GROUP BY order_id
+                ) p ON p.order_id = o.order_id
                 WHERE o.order_date BETWEEN %s AND %s
-                GROUP BY o.order_id, o.order_date, customer_name, phone, o.total_amount
                 ORDER BY o.order_date DESC
                 """,
                 (start_date, end_date)
@@ -200,7 +214,9 @@ class ReportRepository:
                     'phone': row[3],
                     'item_count': row[4] if row[4] else 0,
                     'total_amount': float(row[5]) if row[5] else 0,
-                    'total_paid': float(row[6]) if row[6] else 0
+                    'total_paid': float(row[6]) if row[6] else 0,
+                    'payment_status': row[7] if row[7] else 'pending',
+                    'order_status': row[8] if row[8] else ''
                 }
                 for row in rows
             ]
@@ -254,22 +270,28 @@ class ReportRepository:
         """
         query = """
             SELECT
-                COUNT(*) as total_orders,
+                COUNT(o.order_id) as total_orders,
                 SUM(o.total_amount) as total_sales,
                 AVG(o.total_amount) as avg_order_value,
-                SUM(o.tip_amount) as total_tips,
+                SUM(COALESCE(o.tip_amount, 0) + COALESCE(p.payment_tips, 0)) as total_tips,
                 SUM(o.discount_amount) as total_discounts
             FROM kitch_order o
             JOIN kitch_status s ON o.current_status_id = s.status_id
+            LEFT JOIN (
+                SELECT order_id, SUM(tip_amount) as payment_tips
+                FROM kitch_payment
+                WHERE payment_status NOT IN ('cancelled', 'refunded')
+                GROUP BY order_id
+            ) p ON o.order_id = p.order_id
             WHERE s.status_name != 'Cancelled'
         """
         params = []
 
         if start_date:
-            query += " AND order_date >= %s"
+            query += " AND o.order_date >= %s"
             params.append(start_date)
         if end_date:
-            query += " AND order_date <= %s"
+            query += " AND o.order_date <= %s"
             params.append(end_date)
 
         with get_db_cursor(commit=False) as cursor:
